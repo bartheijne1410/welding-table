@@ -1,6 +1,5 @@
 {
   "name": "Welding Table — Panasonic",
-   "start_url": "./welding_table.html",
   "description": "Lasrobot welding parameters database met heat input calculator",
   "start_url": "./welding_table.html",
   "display": "standalone",
