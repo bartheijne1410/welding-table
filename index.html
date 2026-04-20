@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WeldTable</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0e18;--s1:#141420;--s2:#1a1a28;--bdr:#22223a;--bdr2:#2a2a42;
+  --amber:#f59e0b;--amber-d:rgba(245,158,11,.12);
+  --blue:#38bdf8;--blue-d:rgba(56,189,248,.1);
+  --green:#34d399;--green-d:rgba(52,211,153,.1);
+  --red:#f87171;--red-d:rgba(248,113,113,.1);
+  --purple:#a78bfa;
+  --t1:#eeeef8;--t2:#8888aa;--t3:#44445a;
+  --mono:'Share Tech Mono',monospace;
+  --head:'Rajdhani',sans-serif;
+  --body:'Inter',sans-serif;
+  --r:10px;--rs:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--t1);font-family:var(--body);font-size:15px;overflow-x:hidden}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
+
+/* HEADER */
+.hdr{background:var(--s1);border-bottom:1px solid var(--bdr);height:54px;display:flex;align-items:center;padding:0 16px;gap:10px;position:sticky;top:0;z-index:200}
+.hdr-logo{font-family:var(--head);font-size:22px;font-weight:700;color:var(--amber);letter-spacing:1px;flex:1}
+.hdr-logo small{color:var(--t2);font-size:13px;font-weight:400;margin-left:4px}
+.hdr-count{font-family:var(--mono);font-size:10px;color:var(--green);background:var(--green-d);border:1px solid var(--green);padding:3px 8px;border-radius:20px;letter-spacing:1px}
+.hdr-lockbtn{background:none;border:1px solid var(--bdr2);color:var(--t2);width:34px;height:34px;border-radius:var(--rs);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.hdr-lockbtn.open{border-color:var(--green);color:var(--green)}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--s1);border-top:1px solid var(--bdr);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom)}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 2px;gap:2px;background:none;border:none;color:var(--t3);cursor:pointer;font-family:var(--head);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;transition:color .2s}
+.bn.on{color:var(--amber)}
+.bn-ico{font-size:19px;line-height:1}
+
+/* PAGES */
+.pg{display:none;padding:14px 14px 88px}
+.pg.on{display:block}
+
+/* TYPOGRAPHY */
+.ptitle{font-family:var(--head);font-size:26px;font-weight:700;color:var(--t1);letter-spacing:1px;margin-bottom:2px}
+.ptitle span{color:var(--amber)}
+.psub{font-size:12px;color:var(--t2);margin-bottom:16px}
+.sec{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--t3);text-transform:uppercase;margin-bottom:8px;margin-top:16px}
+.sec:first-child{margin-top:0}
+
+/* CARD */
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.card-hd{font-family:var(--head);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--t2);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.card-hd .d{width:6px;height:6px;border-radius:50%;background:var(--amber);flex-shrink:0}
+
+/* BUTTONS */
+.btn{font-family:var(--head);font-weight:700;font-size:15px;letter-spacing:1px;text-transform:uppercase;padding:13px 18px;border:none;border-radius:var(--rs);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;width:100%;transition:all .15s}
+.btn-a{background:var(--amber);color:#000}.btn-a:active{background:#fbbf24;transform:scale(.98)}
+.btn-o{background:transparent;color:var(--amber);border:2px solid var(--amber)}.btn-o:active{background:var(--amber-d)}
+.btn-g{background:var(--s2);color:var(--t1);border:1px solid var(--bdr2)}.btn-g:active{background:var(--bdr)}
+.btn-grn{background:var(--green);color:#000}.btn-grn:active{background:#6ee7b7}
+.btn-r{background:var(--red-d);color:var(--red);border:1px solid var(--red)}
+.btn-sm{padding:8px 13px;font-size:12px;width:auto}
+.btn-row{display:flex;gap:8px}.btn-row .btn{flex:1}
+.divider{height:1px;background:var(--bdr);margin:14px 0}
+
+/* FIELDS */
+.fld{margin-bottom:12px}
+.fld label{display:block;font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--t2);text-transform:uppercase;margin-bottom:5px}
+.fld input,.fld select{width:100%;background:var(--s2);border:1.5px solid var(--bdr2);color:var(--t1);padding:12px 13px;font-family:var(--mono);font-size:13px;border-radius:var(--rs);-webkit-appearance:none;transition:border-color .2s}
+.fld input:focus,.fld select:focus{outline:none;border-color:var(--amber)}
+.fld input.err{border-color:var(--red)}
+.fld2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fld-hint{font-size:11px;color:var(--t2);margin-top:3px}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-family:var(--head);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:1px solid}
+.pill-g{background:var(--green-d);color:var(--green);border-color:var(--green)}
+.pill-r{background:var(--red-d);color:var(--red);border-color:var(--red)}
+.pill-a{background:var(--amber-d);color:var(--amber);border-color:var(--amber)}
+.pill-b{background:var(--blue-d);color:var(--blue);border-color:var(--blue)}
+.pill-m{background:var(--s2);color:var(--t2);border-color:var(--bdr2)}
+
+/* SEARCH TABS */
+.stabs{display:flex;gap:6px;margin-bottom:14px}
+.stab{flex:1;background:var(--s2);border:1.5px solid var(--bdr2);color:var(--t2);padding:10px 8px;border-radius:var(--rs);font-family:var(--head);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;text-align:center}
+.stab.on{background:var(--amber-d);border-color:var(--amber);color:var(--amber)}
+
+/* RESULT CARD */
+.rcard{background:var(--s1);border:1.5px solid var(--amber);border-radius:var(--r);overflow:hidden;margin-bottom:10px;animation:su .25s ease}
+@keyframes su{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.rcard-hd{background:var(--amber-d);padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
+.rcard-id{font-family:var(--head);font-size:20px;font-weight:700;color:var(--amber)}
+.rcard-meta{font-family:var(--mono);font-size:10px;color:var(--t2);margin-top:1px}
+.rcard-body{padding:12px 14px}
+.pbox-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}
+.pbox{background:var(--s2);border-radius:var(--rs);padding:9px 6px;text-align:center}
+.pbox-v{font-family:var(--mono);font-size:17px;font-weight:bold;line-height:1}
+.pbox-l{font-size:8px;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-top:2px;font-family:var(--head)}
+.layer-btn{width:100%;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--rs);padding:9px 12px;color:var(--t2);font-family:var(--head);font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.layer-btn.op .chev{transform:rotate(180deg)}
+.chev{transition:transform .2s}
+.ldet{display:none;background:var(--s2);border-radius:var(--rs);padding:10px;margin-bottom:5px}
+.ldet.on{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.ldi-k{font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--t3);text-transform:uppercase}
+.ldi-v{font-family:var(--mono);font-size:12px;color:var(--t1);margin-top:1px}
+
+/* NO RESULT */
+.no-res{text-align:center;padding:30px 16px;color:var(--t2)}
+.no-res .nr-ico{font-size:36px;margin-bottom:8px}
+.no-res p{font-size:13px}
+
+/* TEMP WARNING */
+.tw{background:var(--red-d);border:1px solid var(--red);border-radius:var(--rs);padding:9px 12px;font-size:12px;color:var(--red);display:none;margin-top:6px;align-items:center;gap:7px}
+.tw.on{display:flex}
+
+/* STEPS */
+.steps{display:flex;align-items:center;margin-bottom:18px}
+.step{flex:1;text-align:center;position:relative}
+.step::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:2px;background:var(--bdr2);z-index:0}
+.step:last-child::after{display:none}
+.step-dot{width:26px;height:26px;border-radius:50%;background:var(--s2);border:2px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-family:var(--head);font-size:11px;font-weight:700;color:var(--t3);margin:0 auto 4px;position:relative;z-index:1;transition:all .3s}
+.step.cur .step-dot{border-color:var(--amber);color:var(--amber);background:var(--amber-d)}
+.step.done .step-dot{border-color:var(--green);background:var(--green);color:#000}
+.step.done::after{background:var(--green)}
+.step-l{font-family:var(--head);font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--t3)}
+.step.cur .step-l{color:var(--amber)}
+.step.done .step-l{color:var(--green)}
+
+/* HI DISPLAY */
+.hi-box{background:var(--s2);border:2px solid var(--bdr2);border-radius:var(--r);padding:18px;text-align:center;margin-bottom:12px;transition:border-color .3s}
+.hi-box.ok{border-color:var(--green);background:var(--green-d)}
+.hi-box.warn{border-color:var(--amber);background:var(--amber-d)}
+.hi-box.err{border-color:var(--red);background:var(--red-d)}
+.hi-num{font-family:var(--mono);font-size:48px;font-weight:bold;line-height:1;color:var(--t1)}
+.hi-unit{font-family:var(--head);font-size:12px;letter-spacing:2px;color:var(--t2);margin-top:3px}
+.hi-st{font-family:var(--head);font-size:15px;font-weight:700;letter-spacing:2px;margin-top:9px;text-transform:uppercase}
+.hi-st.ok{color:var(--green)}.hi-st.warn{color:var(--amber)}.hi-st.err{color:var(--red)}
+.hi-rng{font-family:var(--mono);font-size:10px;color:var(--t2);margin-top:4px}
+.gauge{margin:10px 0}
+.gauge-bar{height:9px;background:var(--s2);border-radius:5px;position:relative;overflow:visible}
+.gauge-fill{position:absolute;height:100%;border-radius:5px;background:linear-gradient(90deg,#065f46,var(--green))}
+.gauge-pin{position:absolute;top:-5px;width:4px;height:19px;background:var(--amber);border-radius:2px;transform:translateX(-50%);box-shadow:0 0 8px var(--amber);transition:left .4s}
+.gauge-ls{display:flex;justify-content:space-between;margin-top:3px;font-family:var(--mono);font-size:8px;color:var(--t3)}
+
+/* RANGE TABLE */
+.rtbl{width:100%;border-collapse:collapse;font-size:11px;margin-top:10px}
+.rtbl th{font-family:var(--head);font-size:8px;letter-spacing:2px;color:var(--t3);padding:5px 7px;border-bottom:1px solid var(--bdr);text-transform:uppercase}
+.rtbl td{font-family:var(--mono);padding:6px 7px;border-bottom:1px solid var(--bdr);color:var(--t2)}
+.rtbl tr.hl td{color:var(--amber);background:var(--amber-d)}
+
+/* SUMMARY BOXES */
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
+.sum-box{background:var(--s2);border-radius:var(--rs);padding:9px;text-align:center}
+.sum-v{font-family:var(--mono);font-size:15px;font-weight:bold;line-height:1}
+.sum-l{font-size:8px;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-top:2px;font-family:var(--head)}
+
+/* EDITOR */
+.stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+.stile{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;text-align:center}
+.stile .sv{font-family:var(--mono);font-size:30px;line-height:1;color:var(--amber)}
+.stile .sl{font-family:var(--head);font-size:10px;letter-spacing:2px;color:var(--t2);text-transform:uppercase;margin-top:3px}
+.stile.bl .sv{color:var(--blue)}
+.stile.gr .sv{color:var(--green)}
+.stile.rd .sv{color:var(--red)}
+.etabs{display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px}
+.etab{background:var(--s2);border:1px solid var(--bdr2);color:var(--t2);padding:7px 12px;border-radius:var(--rs);font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;white-space:nowrap;transition:all .2s}
+.etab.on{background:var(--amber-d);border-color:var(--amber);color:var(--amber)}
+.eitem{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:8px}
+.eitem-hd{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.eitem-body{display:none;padding:0 14px 14px}
+.eitem-body.on{display:block}
+.eitem-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+
+/* NAAD DIAGRAMS */
+.diag-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dcard{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:12px}
+.dcard-n{font-family:var(--head);font-size:13px;font-weight:700;letter-spacing:1px;color:var(--amber);margin-bottom:8px;text-transform:uppercase}
+.dcard-i{font-size:10px;color:var(--t2);line-height:1.6}
+
+/* SWING */
+.pat-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
+.pat{background:var(--s1);border:1.5px solid var(--bdr2);border-radius:var(--r);padding:11px;cursor:pointer;text-align:center;transition:all .2s}
+.pat.on{border-color:var(--amber);background:var(--amber-d)}
+.pat-n{font-family:var(--head);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.pat-d{font-family:var(--mono);font-size:9px;color:var(--purple);letter-spacing:1px;margin-top:2px}
+.canv-wrap{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);padding:10px;text-align:center;margin-bottom:12px}
+.prow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bdr)}
+.prow:last-child{border-bottom:none}
+.pr-n{font-family:var(--head);font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.pr-d{font-size:10px;color:var(--t2);margin-top:1px}
+.pr-v{font-family:var(--mono);font-size:13px;color:var(--amber)}
+
+/* LOCK */
+.lock-ov{position:fixed;inset:0;background:rgba(14,14,24,.97);z-index:999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.lock-ov.h{display:none}
+.lock-box{background:var(--s1);border:2px solid var(--amber);border-radius:var(--r);padding:26px 22px;text-align:center;width:300px;max-width:88vw}
+.lock-ico{font-size:34px;margin-bottom:10px}
+.lock-t{font-family:var(--head);font-size:18px;font-weight:700;letter-spacing:3px;color:var(--amber);text-transform:uppercase;margin-bottom:5px}
+.lock-s{font-size:12px;color:var(--t2);margin-bottom:18px;line-height:1.5}
+.lock-in{width:100%;background:var(--s2);border:2px solid var(--bdr2);color:var(--t1);padding:13px;font-family:var(--mono);font-size:17px;border-radius:var(--rs);text-align:center;letter-spacing:5px;margin-bottom:9px;transition:border-color .2s}
+.lock-in:focus{outline:none;border-color:var(--amber)}
+.lock-err{font-family:var(--mono);font-size:10px;color:var(--red);height:13px;margin-bottom:8px}
+@keyframes shk{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-8px)}50%{transform:translateX(8px)}}
+.shk{animation:shk .35s}
+
+/* TOAST */
+#toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:var(--s1);border:1px solid var(--amber);color:var(--t1);font-family:var(--mono);font-size:11px;padding:9px 18px;border-radius:20px;z-index:999;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none;letter-spacing:1px}
+
+/* INSTALL BANNER */
+#instbanner{display:none;background:var(--amber);color:#000;padding:10px 14px;text-align:center;font-family:var(--head);font-weight:700;font-size:13px;letter-spacing:1px;cursor:pointer}
+#instbanner.on{display:block}
+
+/* EMPTY */
+.empty{text-align:center;padding:36px 16px}
+.empty .ei{font-size:36px;margin-bottom:8px}
+.empty p{font-size:13px;color:var(--t2)}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- LOCK -->
+<div class="lock-ov h" id="lock-ov">
+  <div class="lock-box">
+    <div class="lock-ico">🔐</div>
+    <div class="lock-t">Editor toegang</div>
+    <div class="lock-s">Voer je wachtwoord in om records te beheren</div>
+    <input class="lock-in" id="lpw" type="password" maxlength="30" placeholder="••••••" onkeydown="if(event.key==='Enter')chkPW()">
+    <div class="lock-err" id="lerr"></div>
+    <button class="btn btn-a" style="margin-bottom:7px" onclick="chkPW()">Ontgrendelen</button>
+    <button class="btn btn-g" onclick="closeLock()">Annuleren</button>
+  </div>
+</div>
+
+<div id="instbanner" onclick="doInstall()">📲 Installeer WeldTable als app</div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-logo">WeldTable <small>Panasonic</small></div>
+  <span class="hdr-count" id="hdr-cnt">— rec</span>
+  <button class="hdr-lockbtn" id="lbtn" onclick="toggleEditor()">🔒</button>
+</header>
+
+<!-- ═══ PAGE: ZOEKEN ═══ -->
+<div class="pg on" id="pg-zoek">
+  <div class="ptitle">Las<span>Zoeken</span></div>
+  <div class="psub">Zoek op lasnummer of basisparameters</div>
+
+  <!-- ZOEK TABS -->
+  <div class="stabs">
+    <div class="stab on" id="stab-nr" onclick="switchSearchTab('nr')">Op lasnummer</div>
+    <div class="stab" id="stab-par" onclick="switchSearchTab('par')">Op parameters</div>
+  </div>
+
+  <!-- TAB: LASNUMMER -->
+  <div id="search-nr">
+    <div class="card">
+      <div class="card-hd"><div class="d"></div>Lasnummer invoeren</div>
+      <div class="fld">
+        <input type="text" id="inp-nr" placeholder="Las0001, Las0006…" oninput="searchByNr()" style="font-size:17px;padding:14px 13px">
+        <div class="fld-hint">Typ een lasnummer — resultaten verschijnen direct</div>
+      </div>
+    </div>
+    <div id="res-nr"></div>
+  </div>
+
+  <!-- TAB: PARAMETERS (zoals Excel Invoer tabblad) -->
+  <div id="search-par" style="display:none">
+    <div class="card">
+      <div class="card-hd"><div class="d"></div>Basisparameters invullen</div>
+      <div class="fld2">
+        <div class="fld">
+          <label>Materiaal</label>
+          <select id="sp-mat" onchange="searchByParams()">
+            <option value="">Alle</option>
+            <option>S700</option><option>S355</option><option>S235</option><option>S460</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Positie</label>
+          <select id="sp-pos" onchange="searchByParams()">
+            <option value="">Alle</option>
+            <option>PA</option><option>PB</option><option>PC</option>
+          </select>
+        </div>
+      </div>
+      <div class="fld2">
+        <div class="fld">
+          <label>Dikte 1 (mm)</label>
+          <input type="number" id="sp-d1" placeholder="bijv. 8" oninput="searchByParams()">
+        </div>
+        <div class="fld">
+          <label>Dikte 2 (mm)</label>
+          <input type="number" id="sp-d2" placeholder="bijv. 8" oninput="searchByParams()">
+        </div>
+      </div>
+      <div class="fld">
+        <label>Type LasNaad</label>
+        <select id="sp-naad" onchange="searchByParams()">
+          <option value="">Alle naadtypen</option>
+          <option>Binnen hoeklas</option>
+          <option>V-Naad</option>
+          <option>Halve V-Naad</option>
+          <option>K-Naad</option>
+          <option>X-Naad</option>
+          <option>Y-Naad</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label>A/S-hoogte</label>
+        <input type="text" id="sp-ah" placeholder="bijv. A5, A6, A20…" oninput="searchByParams()">
+      </div>
+      <button class="btn btn-g" style="margin-top:4px" onclick="clearParamSearch()">↺ Wis filters</button>
+    </div>
+    <div id="res-par">
+      <div class="no-res"><div class="nr-ico">🔍</div><p>Vul parameters in om te zoeken</p></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <button class="btn btn-a" onclick="goNew()">＋ Nieuwe las toevoegen</button>
+  <div style="text-align:center;font-size:11px;color:var(--t2);margin-top:7px">Heat input wordt gecontroleerd voor opslaan</div>
+</div>
+
+<!-- ═══ PAGE: NIEUWE LAS ═══ -->
+<div class="pg" id="pg-new">
+  <div class="ptitle">Nieuwe <span>Las</span></div>
+
+  <div class="steps" id="stps">
+    <div class="step cur" id="stp1"><div class="step-dot">1</div><div class="step-l">Basis</div></div>
+    <div class="step" id="stp2"><div class="step-dot">2</div><div class="step-l">HI Check</div></div>
+    <div class="step" id="stp3"><div class="step-dot">3</div><div class="step-l">Parameters</div></div>
+    <div class="step" id="stp4"><div class="step-dot">4</div><div class="step-l">Indienen</div></div>
+  </div>
+
+  <!-- STAP 1 -->
+  <div id="ns1">
+    <div class="card">
+      <div class="card-hd"><div class="d"></div>Basisgegevens</div>
+      <div class="fld"><label>Las ID</label><input type="text" id="n-id" placeholder="Las0016"></div>
+      <div class="fld2">
+        <div class="fld"><label>Laag</label><input type="number" id="n-laag" value="1" min="1"></div>
+        <div class="fld"><label>Positie</label><select id="n-pos"><option>PA</option><option>PB</option><option>PC</option><option>PD</option><option>PE</option><option>PF</option></select></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label>Materiaal 1</label><select id="n-m1"><option>S700</option><option>S355</option><option>S235</option><option>S460</option></select></div>
+        <div class="fld"><label>Dikte 1 mm</label><input type="number" id="n-d1" placeholder="8"></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label>Materiaal 2</label><select id="n-m2"><option>S700</option><option>S355</option><option>S235</option><option>S460</option></select></div>
+        <div class="fld"><label>Dikte 2 mm</label><input type="number" id="n-d2" placeholder="8"></div>
+      </div>
+      <div class="fld"><label>Type LasNaad</label>
+        <select id="n-naad"><option>Binnen hoeklas</option><option>V-Naad</option><option>Halve V-Naad</option><option>K-Naad</option><option>X-Naad</option><option>Y-Naad</option></select>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label>A/S-hoogte</label><input type="text" id="n-ah" placeholder="A5"></div>
+        <div class="fld"><label>Temperatuur °C</label><input type="number" id="n-temp" placeholder="15" oninput="chkTemp()"></div>
+      </div>
+      <div class="tw" id="tw">⚠️ <span id="tw-msg">Te koud!</span></div>
+      <div class="fld"><label>Toevoegmateriaal</label><input type="text" id="n-fill" value="NiMoCr S690"></div>
+      <div class="fld2">
+        <div class="fld"><label>Gas</label><input type="text" id="n-gas" value="M21"></div>
+        <div class="fld"><label>Doorlassing</label><select id="n-door"><option>NEE</option><option>JA</option></select></div>
+      </div>
+    </div>
+    <button class="btn btn-a" onclick="goStp(2)">Volgende → Heat Input check</button>
+  </div>
+
+  <!-- STAP 2 -->
+  <div id="ns2" style="display:none">
+    <div class="hi-box" id="hi-box">
+      <div class="hi-num" id="hi-num">—</div>
+      <div class="hi-unit">kJ / mm</div>
+      <div class="hi-st" id="hi-st">Voer waarden in</div>
+      <div class="hi-rng" id="hi-rng"></div>
+    </div>
+    <div class="gauge" id="hi-gauge" style="display:none">
+      <div class="gauge-bar"><div class="gauge-fill" id="gfill"></div><div class="gauge-pin" id="gpin"></div></div>
+      <div class="gauge-ls" id="gls"><span>0</span><span></span><span></span></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><div class="d"></div>Lasinstellingen</div>
+      <div class="fld2">
+        <div class="fld"><label>Ampère (A)</label><input type="number" id="hi-A" placeholder="245" oninput="calcHI()"></div>
+        <div class="fld"><label>Voltage (V)</label><input type="number" id="hi-V" placeholder="28" oninput="calcHI()"></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label>Snelheid m/min</label><input type="number" id="hi-S" placeholder="0.30" step="0.01" oninput="calcHI()"></div>
+        <div class="fld"><label>K-factor</label><select id="hi-K" onchange="calcHI()"><option value="0.8">0.8 MIG/MAG</option><option value="0.6">0.6 TIG</option><option value="1.0">1.0 Amerikaans</option></select></div>
+      </div>
+      <div class="fld"><label>Range (auto op basis stap 1)</label>
+        <select id="hi-rk" onchange="calcHI()"><option value="bs7">Stuiklas S700 (0.50–1.13)</option><option value="hs7">Hoeklas S700 (1.03–1.73)</option><option value="bs3">Stuiklas S355 (0.50–2.50)</option><option value="hs3">Hoeklas SL S355 (0.80–2.80)</option><option value="hm3">Hoeklas ML S355 (0.60–3.00)</option></select>
+      </div>
+      <table class="rtbl"><thead><tr><th>Materiaal</th><th>Type</th><th>Min</th><th>Max</th></tr></thead><tbody id="rtbl-body"></tbody></table>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-g" onclick="goStp(1)">← Terug</button>
+      <button class="btn btn-a" id="btn-next3" onclick="goStp(3)" disabled style="opacity:.4">Parameters →</button>
+    </div>
+  </div>
+
+  <!-- STAP 3 -->
+  <div id="ns3" style="display:none">
+    <div class="card">
+      <div class="card-hd"><div class="d"></div>Lasparameters</div>
+      <div class="fld2">
+        <div class="fld"><label>Draad Ø mm</label><input type="number" id="n-wire" value="1.2" step="0.1"></div>
+        <div class="fld"><label>Stick Out mm</label><input type="number" id="n-so" value="17"></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label>Puls</label><select id="n-puls"><option>Standaard Puls</option><option>UIT</option></select></div>
+        <div class="fld"><label>Arc Retry</label><input type="number" id="n-arc" value="3"></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label>Crater Ampère</label><input type="number" id="n-ca" placeholder="140"></div>
+        <div class="fld"><label>Crater Voltage</label><input type="number" id="n-cv" placeholder="22"></div>
+      </div>
+      <div class="fld2">
+        <div class="fld"><label>Crater Tijd s</label><input type="number" id="n-ct" value="1" step="0.1"></div>
+        <div class="fld"><label>Stick Release</label><input type="number" id="n-sr" value="3"></div>
+      </div>
+      <div class="fld"><label>Zwaailas</label>
+        <select id="n-swing" onchange="document.getElementById('swflds').style.display=this.value==='ja'?'block':'none'">
+          <option value="nee">NEE</option><option value="ja">JA</option>
+        </select>
+      </div>
+      <div id="swflds" style="display:none">
+        <div class="fld2">
+          <div class="fld"><label>Swing 1 mm</label><input type="number" id="n-sw1" value="2.8" step="0.1"></div>
+          <div class="fld"><label>Swing 2 mm</label><input type="number" id="n-sw2" value="2.8" step="0.1"></div>
+        </div>
+        <div class="fld2">
+          <div class="fld"><label>Frequency Hz</label><input type="number" id="n-freq" value="1.5" step="0.1"></div>
+          <div class="fld"><label>Patroon DTPS</label><select id="n-swp"><option value="1">1 Sinusoïde</option><option value="2">2 Driehoek</option><option value="3">3 Trapezium</option><option value="4">4 Figuur-8</option></select></div>
+        </div>
+      </div>
+      <div class="fld"><label>Opmerkingen</label><input type="text" id="n-notes" placeholder="Optioneel"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-g" onclick="goStp(2)">← Terug</button>
+      <button class="btn btn-a" onclick="goStp(4)">Overzicht →</button>
+    </div>
+  </div>
+
+  <!-- STAP 4 -->
+  <div id="ns4" style="display:none">
+    <div class="card">
+      <div class="card-hd"><div class="d" style="background:var(--green)"></div>Controleer — alles correct?</div>
+      <div id="sum"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-g" onclick="goStp(3)">← Aanpassen</button>
+      <button class="btn btn-grn" onclick="submit()">✓ Indienen</button>
+    </div>
+    <div style="text-align:center;font-size:10px;color:var(--t2);margin-top:8px">Wordt zichtbaar na goedkeuring door editor</div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: NAAD DIAGRAMMEN ═══ -->
+<div class="pg" id="pg-naad">
+  <div class="ptitle">Naad<span>Types</span></div>
+  <div class="psub">Referentie geometrie</div>
+  <div class="diag-grid" id="dg"></div>
+</div>
+
+<!-- ═══ PAGE: ZWAAILAS ═══ -->
+<div class="pg" id="pg-swing">
+  <div class="ptitle">Zwaai<span>Las</span></div>
+  <div class="psub">DTPS oscillatiepatronen</div>
+  <div class="pat-grid" id="patg"></div>
+  <div class="canv-wrap">
+    <div style="font-family:var(--mono);font-size:8px;letter-spacing:3px;color:var(--t3);margin-bottom:7px;text-transform:uppercase">Live animatie</div>
+    <canvas id="sc" width="270" height="85" style="border:1px solid var(--bdr);border-radius:5px"></canvas>
+  </div>
+  <div class="card" id="swcard">
+    <div class="card-hd"><div class="d"></div><span id="swt">Selecteer patroon</span></div>
+    <div id="swc" style="color:var(--t2);font-size:12px">Klik op een patroon.</div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: EDITOR ═══ -->
+<div class="pg" id="pg-ed">
+  <div class="ptitle">Editor <span>Dashboard</span></div>
+  <div id="ed-locked">
+    <div class="empty"><div class="ei">🔐</div><p style="margin-bottom:14px">Log in als editor</p>
+    <button class="btn btn-a" style="max-width:240px;margin:0 auto" onclick="openLock()">Inloggen</button></div>
+  </div>
+  <div id="ed-open" style="display:none">
+    <div class="stat-row">
+      <div class="stile"><div class="sv" id="ed-tot">0</div><div class="sl">Totaal</div></div>
+      <div class="stile bl"><div class="sv" id="ed-pen">0</div><div class="sl">Wachtend</div></div>
+      <div class="stile gr"><div class="sv" id="ed-apr">0</div><div class="sl">Goedgekeurd</div></div>
+      <div class="stile rd"><div class="sv" id="ed-rej">0</div><div class="sl">Afgewezen</div></div>
+    </div>
+    <div class="etabs">
+      <div class="etab on" id="et-all" onclick="setETab('all')">Alle</div>
+      <div class="etab" id="et-pending" onclick="setETab('pending')">⏳ Wachtend</div>
+      <div class="etab" id="et-approved" onclick="setETab('approved')">✅ Goedgekeurd</div>
+      <div class="etab" id="et-rejected" onclick="setETab('rejected')">❌ Afgewezen</div>
+    </div>
+    <div id="ed-list"></div>
+    <div class="divider"></div>
+    <button class="btn btn-g" style="margin-bottom:7px" onclick="xPDF()">📄 Export PDF goedgekeurde lassen</button>
+    <button class="btn btn-r btn-sm" style="width:100%" onclick="edLogout()">Uitloggen</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <button class="bn on" id="bn-zoek" onclick="goPage('zoek')"><span class="bn-ico">🔍</span>Zoeken</button>
+  <button class="bn" id="bn-new" onclick="goNew()"><span class="bn-ico">➕</span>Nieuwe Las</button>
+  <button class="bn" id="bn-naad" onclick="goPage('naad')"><span class="bn-ico">📐</span>Naadtypes</button>
+  <button class="bn" id="bn-swing" onclick="goPage('swing')"><span class="bn-ico">〰️</span>Zwaailas</button>
+  <button class="bn" id="bn-ed" onclick="goPage('ed')"><span class="bn-ico">🔐</span>Editor</button>
+</nav>
+
+<script>
+// ══ DATA ══
+let db=[
+  {id:"Las0001",laag:1,pos:"PA",m1:"S700",d1:4,m2:"S700",d2:4,fill:"NiMoCr S690",gas:"M21",naad:"V-Naad",ah:"A4",puls:"UIT",A:150,V:21,S:0.25,arc:3,cA:100,cV:19,cT:0.3,sr:3,swing:false,door:"JA",datum:46072,temp:1.6,status:"approved",notes:""},
+  {id:"Las0002",laag:1,pos:"PA",m1:"S700",d1:15,m2:"S700",d2:8,fill:"NiMoCr S690",gas:"M21",naad:"Halve V-Naad",ah:"A5",puls:"UIT",A:235,V:25,S:0.27,arc:3,cA:140,cV:22,cT:1.3,sr:3,swing:false,door:"NEE",datum:46072,temp:16,status:"approved",notes:""},
+  {id:"Las0003",laag:1,pos:"PB",m1:"S700",d1:50,m2:"S700",d2:10,fill:"NiMoCr S690",gas:"M21",naad:"Binnen hoeklas",ah:"6",puls:"Standaard Puls",A:260,V:29.5,S:0.32,arc:3,cA:140,cV:22,cT:1,sr:3,swing:false,door:"NEE",datum:46101,temp:11.3,status:"approved",notes:""},
+  {id:"Las0004",laag:1,pos:"PA",m1:"S700",d1:4,m2:"S700",d2:4,fill:"NiMoCr S690",gas:"M21",naad:"V-Naad",ah:"A5",puls:"Standaard Puls",A:176,V:22.5,S:0.56,arc:3,cA:100,cV:18,cT:0.3,sr:3,swing:false,door:"NEE",datum:45923,temp:12,status:"approved",notes:""},
+  {id:"Las0005",laag:1,pos:"PA",m1:"S700",d1:15,m2:"S700",d2:8,fill:"NiMoCr S690",gas:"M21",naad:"Halve V-Naad",ah:"A5",puls:"UIT",A:235,V:25,S:0.27,arc:3,cA:140,cV:22,cT:1.3,sr:3,swing:false,door:"NEE",datum:45923,temp:15.5,status:"approved",notes:""},
+  {id:"Las0006",laag:1,pos:"PA",m1:"S700",d1:20,m2:"S700",d2:20,fill:"NiMoCr S690",gas:"M21",naad:"Halve V-Naad",ah:"A20",puls:"UIT",A:305,V:24.2,S:0.4,arc:3,cA:140,cV:22,cT:1,sr:3,swing:false,door:"NEE",datum:45923,temp:15.5,status:"approved",notes:""},
+  {id:"Las0006",laag:2,pos:"PA",m1:"S700",d1:20,m2:"S700",d2:20,fill:"NiMoCr S690",gas:"M21",naad:"Halve V-Naad",ah:"A20",puls:"Standaard Puls",A:225,V:28.5,S:0.33,arc:3,cA:160,cV:23,cT:1,sr:3,swing:false,door:"NEE",datum:45923,temp:15.5,status:"approved",notes:""},
+  {id:"Las0006",laag:3,pos:"PA",m1:"S700",d1:20,m2:"S700",d2:20,fill:"NiMoCr S690",gas:"M21",naad:"Halve V-Naad",ah:"A20",puls:"Standaard Puls",A:225,V:28.5,S:0.3,arc:3,cA:160,cV:23,cT:1.5,sr:3,swing:true,sw1:2.8,sw2:2.8,freq:1.5,swp:"1",door:"NEE",datum:45923,temp:15.5,status:"approved",notes:""},
+  {id:"Las0006",laag:4,pos:"PA",m1:"S700",d1:20,m2:"S700",d2:20,fill:"NiMoCr S690",gas:"M21",naad:"Halve V-Naad",ah:"A20",puls:"Standaard Puls",A:225,V:28.5,S:0.33,arc:3,cA:140,cV:22,cT:1.1,sr:3,swing:true,sw1:2,sw2:2,freq:1.5,swp:"1",door:"NEE",datum:45923,temp:15.5,status:"approved",notes:""},
+  {id:"Las0007",laag:1,pos:"PA",m1:"S700",d1:8,m2:"S700",d2:8,fill:"NiMoCr S690",gas:"M21",naad:"V-Naad",ah:"A5",puls:"UIT",A:255,V:23.8,S:0.25,arc:3,cA:160,cV:23,cT:0.96,sr:3,swing:false,door:"NEE",datum:45923,temp:15.5,status:"approved",notes:""},
+  {id:"Las0008",laag:1,pos:"PB",m1:"S700",d1:25,m2:"S700",d2:12,fill:"NiMoCr S690",gas:"M21",naad:"Binnen hoeklas",ah:"A5",puls:"Standaard Puls",A:255,V:28.5,S:0.33,arc:3,cA:160,cV:22,cT:0.8,sr:3,swing:false,door:"NEE",datum:46100,temp:15.5,status:"approved",notes:""},
+  {id:"Las0009",laag:1,pos:"PA",m1:"S700",d1:8,m2:"S700",d2:8,fill:"NiMoCr S690",gas:"M21",naad:"V-Naad",ah:"A3",puls:"Standaard Puls",A:195,V:25,S:0.25,arc:3,cA:110,cV:19.9,cT:1.3,sr:3,swing:false,door:"NEE",datum:46101,temp:5.3,status:"approved",notes:""},
+  {id:"Las0010",laag:1,pos:"PB",m1:"S700",d1:10,m2:"S700",d2:25,fill:"NiMoCr S690",gas:"M21",naad:"Binnen hoeklas",ah:"Voorframe",puls:"Standaard Puls",A:265,V:29.6,S:0.3,arc:3,cA:140,cV:22,cT:1,sr:3,swing:false,door:"NEE",datum:46101,temp:5.3,status:"approved",notes:""},
+  {id:"Las0011",laag:1,pos:"PB",m1:"S700",d1:10,m2:"S700",d2:10,fill:"NiMoCr S690",gas:"M21",naad:"Binnen hoeklas",ah:"Voorframe",puls:"Standaard Puls",A:266,V:29.3,S:0.36,arc:3,cA:170,cV:22.5,cT:1,sr:3,swing:false,door:"NEE",datum:46101,temp:5.3,status:"approved",notes:""},
+  {id:"Las0012",laag:1,pos:"PB",m1:"S700",d1:8,m2:"S700",d2:8,fill:"NiMoCr S690",gas:"M21",naad:"Binnen hoeklas",ah:"A5",puls:"Standaard Puls",A:245,V:28,S:0.3,arc:3,cA:140,cV:22,cT:1.3,sr:3,swing:false,door:"NEE",datum:46125,temp:14.7,status:"approved",notes:""},
+  {id:"Las0013",laag:1,pos:"PB",m1:"S355",d1:15,m2:"S355",d2:20,fill:"EMK 8 S355",gas:"M21",naad:"Binnen hoeklas",ah:"A4 S6",puls:"Standaard Puls",A:250,V:27.9,S:0.22,arc:3,cA:120,cV:22.6,cT:0.3,sr:3,swing:false,door:"NEE",datum:46127,temp:10.8,status:"approved",notes:""},
+  {id:"Las0014",laag:1,pos:"PB",m1:"S355",d1:21,m2:"S355",d2:20,fill:"EMK 8 S355",gas:"M21",naad:"Binnen hoeklas",ah:"A4 S6",puls:"Standaard Puls",A:267,V:27.9,S:0.22,arc:3,cA:120,cV:22.6,cT:0.3,sr:3,swing:false,door:"NEE",datum:46127,temp:10.8,status:"approved",notes:""},
+  {id:"Las0014",laag:2,pos:"PB",m1:"S355",d1:21,m2:"S355",d2:20,fill:"EMK 8 S355",gas:"M21",naad:"Binnen hoeklas",ah:"A4 S6",puls:"Standaard Puls",A:230,V:27,S:0.4,arc:3,cA:120,cV:22.6,cT:0.3,sr:3,swing:false,door:"NEE",datum:46127,temp:10.8,status:"approved",notes:""},
+  {id:"Las0015",laag:1,pos:"PB",m1:"S355",d1:6,m2:"S355",d2:15,fill:"EMK 8 S355",gas:"M21",naad:"Binnen hoeklas",ah:"A4 S6",puls:"Standaard Puls",A:250,V:28,S:0.4,arc:3,cA:110,cV:21,cT:0.2,sr:3,swing:false,door:"NEE",datum:46127,temp:10.8,status:"approved",notes:""},
+];
+
+const HR={bs7:{mn:.5,mx:1.13,lb:"Stuiklas S700"},hs7:{mn:1.03,mx:1.73,lb:"Hoeklas S700"},bs3:{mn:.5,mx:2.5,lb:"Stuiklas S355"},hs3:{mn:.8,mx:2.8,lb:"Hoeklas SL S355"},hm3:{mn:.6,mx:3,lb:"Hoeklas ML S355"}};
+
+let isEd=false, etab='all', hiOK=false, newD={}, selP=null, animF=null, animT=0;
+
+// ══ UTILS ══
+const f=(v,d=1)=>v==null?'—':typeof v==='number'?+v.toFixed(d):v;
+const edate=n=>n?new Date((n-25569)*86400000).toLocaleDateString('nl-NL'):'—';
+function cHI(A,V,K,S){return(A*V*K)/(S*1000/60)/1000}
+function rkFor(m,naad){
+  const n=naad.toLowerCase();
+  if(m==='S700'&&n.includes('hoek'))return'hs7';
+  if(m==='S700')return'bs7';
+  if(m==='S355'&&n.includes('ml'))return'hm3';
+  if(m==='S355'&&n.includes('hoek'))return'hs3';
+  if(m==='S355')return'bs3';
+  return'bs7';
+}
+function hiSt(hi,rk){
+  const r=HR[rk];if(!r)return{c:'',lb:'—'};
+  if(hi<r.mn)return{c:'err',lb:`Te laag — min ${r.mn} kJ/mm`};
+  if(hi>r.mx)return{c:'err',lb:`Te hoog — max ${r.mx} kJ/mm`};
+  if(hi<r.mn+.1*(r.mx-r.mn)||hi>r.mx-.1*(r.mx-r.mn))return{c:'warn',lb:'Grenswaarde ⚠'};
+  return{c:'ok',lb:'✓ Binnen range'};
+}
+function hiRec(r){return cHI(r.A,r.V,0.8,r.S)}
+function hiCol(r){const st=hiSt(hiRec(r),rkFor(r.m1,r.naad));return st.c==='ok'?'var(--green)':st.c==='warn'?'var(--amber)':'var(--red)'}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2500)}
+function updCnt(){const a=db.filter(r=>r.status==='approved').length;document.getElementById('hdr-cnt').textContent=a+' rec'}
+
+// ══ NAVIGATION ══
+function goPage(p){
+  document.querySelectorAll('.pg').forEach(e=>e.classList.remove('on'));
+  document.querySelectorAll('.bn').forEach(e=>e.classList.remove('on'));
+  document.getElementById('pg-'+p).classList.add('on');
+  document.getElementById('bn-'+p).classList.add('on');
+  if(p==='naad')renderDiags();
+  if(p==='swing')initSwing();
+  if(p==='ed')renderEd();
+  window.scrollTo(0,0);
+}
+function goNew(){newD={};hiOK=false;goStp(1);goPage('new')}
+
+// ══ SEARCH TABS ══
+function switchSearchTab(t){
+  document.getElementById('stab-nr').classList.toggle('on',t==='nr');
+  document.getElementById('stab-par').classList.toggle('on',t==='par');
+  document.getElementById('search-nr').style.display=t==='nr'?'block':'none';
+  document.getElementById('search-par').style.display=t==='par'?'block':'none';
+}
+
+// ══ SEARCH BY NUMBER ══
+function searchByNr(){
+  const q=document.getElementById('inp-nr').value.trim().toLowerCase();
+  const wrap=document.getElementById('res-nr');
+  if(!q){wrap.innerHTML='';return}
+  const hits=db.filter(r=>r.status==='approved'&&r.id.toLowerCase().includes(q));
+  if(!hits.length){wrap.innerHTML=`<div class="no-res"><div class="nr-ico">😕</div><p>Geen goedgekeurde lassen gevonden voor "${q}"</p></div>`;return}
+  wrap.innerHTML=renderResultCards(hits);
+}
+
+// ══ SEARCH BY PARAMETERS ══
+function searchByParams(){
+  const mat=document.getElementById('sp-mat').value;
+  const pos=document.getElementById('sp-pos').value;
+  const d1=document.getElementById('sp-d1').value;
+  const d2=document.getElementById('sp-d2').value;
+  const naad=document.getElementById('sp-naad').value;
+  const ah=document.getElementById('sp-ah').value.trim().toLowerCase();
+  // check if any filter is set
+  if(!mat&&!pos&&!d1&&!d2&&!naad&&!ah){
+    document.getElementById('res-par').innerHTML=`<div class="no-res"><div class="nr-ico">🔍</div><p>Vul parameters in om te zoeken</p></div>`;
+    return;
+  }
+  const hits=db.filter(r=>{
+    if(r.status!=='approved')return false;
+    if(mat&&r.m1!==mat&&r.m2!==mat)return false;
+    if(pos&&r.pos!==pos)return false;
+    if(d1&&Math.abs(r.d1-parseFloat(d1))>2&&Math.abs(r.d2-parseFloat(d1))>2)return false;
+    if(d2&&Math.abs(r.d2-parseFloat(d2))>2&&Math.abs(r.d1-parseFloat(d2))>2)return false;
+    if(naad&&r.naad!==naad)return false;
+    if(ah&&!r.ah.toLowerCase().includes(ah))return false;
+    return true;
+  });
+  if(!hits.length){
+    document.getElementById('res-par').innerHTML=`<div class="no-res"><div class="nr-ico">😕</div><p>Geen resultaten voor deze combinatie</p><p style="margin-top:6px;font-size:11px">Probeer minder filters te gebruiken</p></div>`;
+    return;
+  }
+  document.getElementById('res-par').innerHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--t2);margin-bottom:8px;letter-spacing:1px">${hits.length} RESULTAAT${hits.length!==1?'EN':''} GEVONDEN</div>`+renderResultCards(hits);
+}
+
+function clearParamSearch(){
+  ['sp-mat','sp-pos','sp-naad'].forEach(id=>document.getElementById(id).value='');
+  ['sp-d1','sp-d2','sp-ah'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('res-par').innerHTML=`<div class="no-res"><div class="nr-ico">🔍</div><p>Vul parameters in om te zoeken</p></div>`;
+}
+
+// ══ RENDER RESULT CARDS ══
+function renderResultCards(hits){
+  const ids=[...new Set(hits.map(r=>r.id))];
+  return ids.map(lid=>{
+    const rows=hits.filter(r=>r.id===lid).sort((a,b)=>a.laag-b.laag);
+    const first=rows[0];
+    const hi=hiRec(first);
+    const hc=hiCol(first);
+    return`<div class="rcard">
+      <div class="rcard-hd">
+        <div>
+          <div class="rcard-id">${lid}</div>
+          <div class="rcard-meta">${first.naad} · ${first.m1} ${first.d1}mm + ${first.m2} ${first.d2}mm · ${first.pos}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--mono);font-size:19px;color:${hc};font-weight:bold">${hi.toFixed(2)}</div>
+          <div style="font-size:8px;color:var(--t2);font-family:var(--head);letter-spacing:1px">kJ/mm</div>
+        </div>
+      </div>
+      <div class="rcard-body">
+        <div class="pbox-grid">
+          <div class="pbox"><div class="pbox-v" style="color:var(--amber)">${first.A}</div><div class="pbox-l">Ampère</div></div>
+          <div class="pbox"><div class="pbox-v" style="color:var(--blue)">${first.V}</div><div class="pbox-l">Volt</div></div>
+          <div class="pbox"><div class="pbox-v" style="color:var(--green)">${first.S}</div><div class="pbox-l">m/min</div></div>
+          <div class="pbox"><div class="pbox-v">${first.pos}</div><div class="pbox-l">Positie</div></div>
+          <div class="pbox"><div class="pbox-v">${first.ah||'—'}</div><div class="pbox-l">A-hoogte</div></div>
+          <div class="pbox"><div class="pbox-v" style="color:${first.temp<5?'var(--red)':'var(--green)'}">${first.temp}°</div><div class="pbox-l">Temp</div></div>
+        </div>
+        ${rows.length>1?rows.map((r,i)=>`
+          <button class="layer-btn" id="lb-${lid}-${i}" onclick="togLayer('${lid}',${i})">
+            Laag ${r.laag} — ${r.puls} · ${r.A}A · ${r.V}V <span class="chev">▼</span>
+          </button>
+          <div class="ldet" id="ld-${lid}-${i}">
+            <div><div class="ldi-k">Ampère</div><div class="ldi-v">${r.A} A</div></div>
+            <div><div class="ldi-k">Voltage</div><div class="ldi-v">${r.V} V</div></div>
+            <div><div class="ldi-k">Snelheid</div><div class="ldi-v">${r.S} m/min</div></div>
+            <div><div class="ldi-k">Heat Input</div><div class="ldi-v" style="color:${hiCol(r)}">${hiRec(r).toFixed(3)} kJ/mm</div></div>
+            <div><div class="ldi-k">Crater A/V</div><div class="ldi-v">${r.cA}/${r.cV}</div></div>
+            <div><div class="ldi-k">Puls</div><div class="ldi-v">${r.puls}</div></div>
+            ${r.swing?`<div><div class="ldi-k">Swing</div><div class="ldi-v">${r.sw1}/${r.sw2}mm</div></div><div><div class="ldi-k">Freq</div><div class="ldi-v">${r.freq}Hz</div></div>`:''}
+            ${r.notes?`<div style="grid-column:span 2"><div class="ldi-k">Opmerking</div><div class="ldi-v">${r.notes}</div></div>`:''}
+          </div>`).join(''):
+          `<div class="ldet on">
+            <div><div class="ldi-k">Puls</div><div class="ldi-v">${first.puls}</div></div>
+            <div><div class="ldi-k">Crater A/V</div><div class="ldi-v">${first.cA}/${first.cV}</div></div>
+            <div><div class="ldi-k">Filler</div><div class="ldi-v">${first.fill}</div></div>
+            <div><div class="ldi-k">Gas</div><div class="ldi-v">${first.gas}</div></div>
+            ${first.notes?`<div style="grid-column:span 2"><div class="ldi-k">Opmerking</div><div class="ldi-v">${first.notes}</div></div>`:''}
+          </div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+function togLayer(lid,i){
+  document.getElementById(`lb-${lid}-${i}`).classList.toggle('op');
+  document.getElementById(`ld-${lid}-${i}`).classList.toggle('on');
+}
+
+// ══ NEW LAS STEPS ══
+function goStp(n){
+  [1,2,3,4].forEach(i=>{
+    document.getElementById(`ns${i}`).style.display=i===n?'block':'none';
+    const s=document.getElementById(`stp${i}`);
+    s.className='step'+(i<n?' done':i===n?' cur':'');
+  });
+  if(n===2)autoRK();
+  if(n===4)buildSum();
+  window.scrollTo(0,0);
+}
+function chkTemp(){
+  const t=parseFloat(document.getElementById('n-temp').value);
+  const m=document.getElementById('n-m1').value;
+  const tw=document.getElementById('tw');
+  if(m==='S700'&&t<5){tw.className='tw on';document.getElementById('tw-msg').textContent=`Te koud! S700 vereist min 5°C. Nu: ${t}°C`;}
+  else if(t<0){tw.className='tw on';document.getElementById('tw-msg').textContent=`${t}°C is te koud om te lassen.`;}
+  else tw.className='tw';
+}
+function autoRK(){
+  const m=document.getElementById('n-m1').value;
+  const naad=document.getElementById('n-naad').value;
+  document.getElementById('hi-rk').value=rkFor(m,naad);
+  renderRTbl(rkFor(m,naad));
+  calcHI();
+}
+function renderRTbl(active){
+  document.getElementById('rtbl-body').innerHTML=Object.entries(HR).map(([k,r])=>
+    `<tr class="${k===active?'hl':''}"><td>${r.lb.includes('S700')?'S700':'S355'}</td><td>${r.lb.replace('S700','').replace('S355','').trim()}</td><td>${r.mn}</td><td>${r.mx}</td></tr>`
+  ).join('');
+}
+function calcHI(){
+  const A=parseFloat(document.getElementById('hi-A').value);
+  const V=parseFloat(document.getElementById('hi-V').value);
+  const S=parseFloat(document.getElementById('hi-S').value);
+  const K=parseFloat(document.getElementById('hi-K').value);
+  const rk=document.getElementById('hi-rk').value;
+  renderRTbl(rk);
+  const btn=document.getElementById('btn-next3');
+  if(!A||!V||!S){
+    document.getElementById('hi-num').textContent='—';
+    document.getElementById('hi-st').textContent='Voer waarden in';
+    document.getElementById('hi-st').className='hi-st';
+    document.getElementById('hi-box').className='hi-box';
+    document.getElementById('hi-gauge').style.display='none';
+    hiOK=false;btn.disabled=true;btn.style.opacity='.4';return;
+  }
+  const hi=cHI(A,V,K,S);
+  const st=hiSt(hi,rk);
+  document.getElementById('hi-num').textContent=hi.toFixed(3);
+  document.getElementById('hi-st').textContent=st.lb;
+  document.getElementById('hi-st').className='hi-st '+st.c;
+  document.getElementById('hi-rng').textContent=`Range: ${HR[rk].mn}–${HR[rk].mx} kJ/mm · ${HR[rk].lb}`;
+  document.getElementById('hi-box').className='hi-box '+st.c;
+  const r=HR[rk],gm=r.mx*1.4;
+  document.getElementById('hi-gauge').style.display='block';
+  document.getElementById('gfill').style.left=(r.mn/gm*100)+'%';
+  document.getElementById('gfill').style.width=((r.mx-r.mn)/gm*100)+'%';
+  document.getElementById('gpin').style.left=Math.min(100,hi/gm*100)+'%';
+  document.getElementById('gls').innerHTML=`<span>0</span><span>${(gm/2).toFixed(2)}</span><span>${gm.toFixed(2)}</span>`;
+  hiOK=st.c!=='err';
+  newD.A=A;newD.V=V;newD.S=S;newD.K=K;newD.hi=hi;newD.rk=rk;
+  btn.disabled=!hiOK;btn.style.opacity=hiOK?'1':'.4';
+}
+function buildSum(){
+  const hc=newD.hi?hiSt(newD.hi,newD.rk).c:'';
+  const col=hc==='ok'?'var(--green)':hc==='warn'?'var(--amber)':'var(--red)';
+  const swing=document.getElementById('n-swing').value==='ja';
+  document.getElementById('sum').innerHTML=`
+    <div class="sum-grid">
+      <div class="sum-box"><div class="sum-v" style="color:var(--amber)">${document.getElementById('n-id').value||'—'}</div><div class="sum-l">Las ID</div></div>
+      <div class="sum-box"><div class="sum-v">${document.getElementById('n-laag').value}</div><div class="sum-l">Laag</div></div>
+      <div class="sum-box"><div class="sum-v">${document.getElementById('n-m1').value} ${document.getElementById('n-d1').value}mm</div><div class="sum-l">Materiaal 1</div></div>
+      <div class="sum-box"><div class="sum-v">${document.getElementById('n-m2').value} ${document.getElementById('n-d2').value}mm</div><div class="sum-l">Materiaal 2</div></div>
+      <div class="sum-box"><div class="sum-v" style="color:var(--amber)">${newD.A||'—'}</div><div class="sum-l">Ampère</div></div>
+      <div class="sum-box"><div class="sum-v" style="color:var(--blue)">${newD.V||'—'}</div><div class="sum-l">Voltage</div></div>
+      <div class="sum-box"><div class="sum-v" style="color:var(--green)">${newD.S||'—'}</div><div class="sum-l">m/min</div></div>
+      <div class="sum-box"><div class="sum-v" style="color:${col}">${newD.hi?newD.hi.toFixed(3):'—'}</div><div class="sum-l">kJ/mm</div></div>
+    </div>
+    <div style="padding:9px 12px;background:var(--s2);border:1px solid ${col};border-radius:var(--rs);text-align:center;margin-bottom:10px">
+      <span style="font-family:var(--head);font-weight:700;font-size:13px;letter-spacing:2px;color:${col};text-transform:uppercase">
+        ${newD.hi?hiSt(newD.hi,newD.rk).lb:'—'}
+      </span>
+    </div>
+    <div style="font-size:12px;color:var(--t2);line-height:1.8">
+      ${document.getElementById('n-naad').value} · Pos: <b style="color:var(--t1)">${document.getElementById('n-pos').value}</b> ·
+      A-hoogte: <b style="color:var(--t1)">${document.getElementById('n-ah').value||'—'}</b> ·
+      Temp: <b style="color:${parseFloat(document.getElementById('n-temp').value)<5?'var(--red)':'var(--green)'}">${document.getElementById('n-temp').value}°C</b>
+      ${swing?`<br>Zwaailas: <b style="color:var(--t1)">JA — ${document.getElementById('n-sw1').value}/${document.getElementById('n-sw2').value}mm · ${document.getElementById('n-freq').value}Hz</b>`:''}
+    </div>`;
+}
+function submit(){
+  const lid=document.getElementById('n-id').value.trim();
+  if(!lid){toast('⚠ Vul een Las ID in');goStp(1);return}
+  const sw=document.getElementById('n-swing').value==='ja';
+  db.push({
+    id:lid,laag:parseInt(document.getElementById('n-laag').value)||1,
+    pos:document.getElementById('n-pos').value,
+    m1:document.getElementById('n-m1').value,d1:parseFloat(document.getElementById('n-d1').value)||0,
+    m2:document.getElementById('n-m2').value,d2:parseFloat(document.getElementById('n-d2').value)||0,
+    fill:document.getElementById('n-fill').value,gas:document.getElementById('n-gas').value,
+    naad:document.getElementById('n-naad').value,ah:document.getElementById('n-ah').value,
+    puls:document.getElementById('n-puls').value,
+    A:newD.A,V:newD.V,S:newD.S,
+    arc:parseInt(document.getElementById('n-arc').value)||3,
+    cA:parseFloat(document.getElementById('n-ca').value)||0,
+    cV:parseFloat(document.getElementById('n-cv').value)||0,
+    cT:parseFloat(document.getElementById('n-ct').value)||1,
+    sr:parseInt(document.getElementById('n-sr').value)||3,
+    swing:sw,sw1:sw?parseFloat(document.getElementById('n-sw1').value):null,
+    sw2:sw?parseFloat(document.getElementById('n-sw2').value):null,
+    freq:sw?parseFloat(document.getElementById('n-freq').value):null,
+    swp:sw?document.getElementById('n-swp').value:null,
+    door:document.getElementById('n-door').value,
+    temp:parseFloat(document.getElementById('n-temp').value)||0,
+    notes:document.getElementById('n-notes').value,
+    datum:Math.floor(Date.now()/86400000)+25569,
+    status:'pending'
+  });
+  updCnt();
+  toast('✓ Las ingediend — wacht op goedkeuring');
+  goPage('zoek');
+}
+
+// ══ AUTH ══
+async function hashStr(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function chkPW(){
+  const v=document.getElementById('lpw').value;if(!v)return;
+  const h=await hashStr(v);
+  const sv=localStorage.getItem('wt_ph');
+  if(!sv){localStorage.setItem('wt_ph',h);isEd=true;sessionStorage.setItem('wt_e','1');closeLock();updEdUI();renderEd();toast('✓ Wachtwoord ingesteld');return}
+  if(h===sv){isEd=true;sessionStorage.setItem('wt_e','1');closeLock();updEdUI();renderEd();toast('✓ Ingelogd')}
+  else{document.getElementById('lerr').textContent='Onjuist wachtwoord';const i=document.getElementById('lpw');i.classList.add('shk');setTimeout(()=>i.classList.remove('shk'),350);i.value=''}
+}
+function openLock(){document.getElementById('lock-ov').classList.remove('h');document.getElementById('lpw').value='';document.getElementById('lerr').textContent='';setTimeout(()=>document.getElementById('lpw').focus(),100)}
+function closeLock(){document.getElementById('lock-ov').classList.add('h')}
+function toggleEditor(){isEd?edLogout():openLock()}
+function edLogout(){isEd=false;sessionStorage.removeItem('wt_e');updEdUI();renderEd();toast('🔒 Uitgelogd')}
+function updEdUI(){const b=document.getElementById('lbtn');b.textContent=isEd?'🔓':'🔒';b.className='hdr-lockbtn'+(isEd?' open':'')}
+document.getElementById('lock-ov').addEventListener('click',function(e){if(e.target===this)closeLock()})
+
+// ══ EDITOR ══
+function renderEd(){
+  document.getElementById('ed-locked').style.display=isEd?'none':'block';
+  document.getElementById('ed-open').style.display=isEd?'block':'none';
+  if(!isEd)return;
+  document.getElementById('ed-tot').textContent=db.length;
+  document.getElementById('ed-pen').textContent=db.filter(r=>r.status==='pending').length;
+  document.getElementById('ed-apr').textContent=db.filter(r=>r.status==='approved').length;
+  document.getElementById('ed-rej').textContent=db.filter(r=>r.status==='rejected').length;
+  renderEdList();
+}
+function setETab(t){
+  etab=t;
+  ['all','pending','approved','rejected'].forEach(x=>{document.getElementById('et-'+x).className='etab'+(x===t?' on':'')});
+  renderEdList();
+}
+function renderEdList(){
+  const list=document.getElementById('ed-list');
+  let data=etab==='all'?[...db]:db.filter(r=>r.status===etab);
+  if(!data.length){list.innerHTML=`<div class="empty"><div class="ei">📋</div><p>Geen records</p></div>`;return}
+  list.innerHTML=data.map(r=>{
+    const hi=hiRec(r);const st=hiSt(hi,rkFor(r.m1,r.naad));
+    const hc=st.c==='ok'?'var(--green)':st.c==='warn'?'var(--amber)':'var(--red)';
+    const idx=db.indexOf(r);
+    const sp=r.status==='approved'?'pill-g':r.status==='pending'?'pill-b':'pill-r';
+    const sl=r.status==='approved'?'✅ OK':r.status==='pending'?'⏳ Wacht':'❌ Afg.';
+    return`<div class="eitem">
+      <div class="eitem-hd" onclick="togEI(${idx})">
+        <div style="flex:1">
+          <div style="font-family:var(--head);font-size:16px;font-weight:700;color:var(--amber)">${r.id} <span style="color:var(--t2);font-size:12px">L${r.laag}</span></div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-top:2px">${r.naad} · ${r.m1} ${r.d1}mm · ${r.A}A ${r.V}V ${r.S}m/min</div>
+        </div>
+        <div style="text-align:right;margin-left:8px">
+          <div style="font-family:var(--mono);font-size:13px;color:${hc};font-weight:bold">${hi.toFixed(2)}</div>
+          <span class="pill ${sp}" style="font-size:8px;margin-top:2px">${sl}</span>
+        </div>
+      </div>
+      <div class="eitem-body" id="ei-${idx}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;font-size:11px;margin-bottom:9px">
+          <div><span style="font-family:var(--mono);font-size:8px;color:var(--t3)">POSITIE</span><br><b>${r.pos}</b></div>
+          <div><span style="font-family:var(--mono);font-size:8px;color:var(--t3)">A-HOOGTE</span><br><b>${r.ah}</b></div>
+          <div><span style="font-family:var(--mono);font-size:8px;color:var(--t3)">TEMP</span><br><b style="color:${r.temp<5?'var(--red)':'var(--green)'}">${r.temp}°C</b></div>
+          <div><span style="font-family:var(--mono);font-size:8px;color:var(--t3)">DATUM</span><br><b>${edate(r.datum)}</b></div>
+          <div><span style="font-family:var(--mono);font-size:8px;color:var(--t3)">FILLER</span><br><b>${r.fill}</b></div>
+          <div><span style="font-family:var(--mono);font-size:8px;color:var(--t3)">PULS</span><br><b>${r.puls}</b></div>
+          ${r.notes?`<div style="grid-column:span 2"><span style="font-family:var(--mono);font-size:8px;color:var(--t3)">OPMERKING</span><br><b>${r.notes}</b></div>`:''}
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;padding:7px 10px;background:var(--s2);border-radius:var(--rs);margin-bottom:9px">
+          HI: <span style="color:${hc};font-weight:bold">${hi.toFixed(3)} kJ/mm</span> · Range: ${HR[rkFor(r.m1,r.naad)]?.mn}–${HR[rkFor(r.m1,r.naad)]?.mx} · <span style="color:${hc}">${st.lb}</span>
+        </div>
+        <div class="eitem-actions">
+          ${r.status!=='approved'?`<button class="btn btn-grn btn-sm" onclick="setSt(${idx},'approved')">✅ Goedkeuren</button>`:''}
+          ${r.status!=='rejected'?`<button class="btn btn-r btn-sm" onclick="setSt(${idx},'rejected')">❌ Afwijzen</button>`:''}
+          <button class="btn btn-g btn-sm" style="color:var(--red)" onclick="delRec(${idx})">🗑 Verwijder</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function togEI(i){document.getElementById('ei-'+i).classList.toggle('on')}
+function setSt(i,s){db[i].status=s;updCnt();renderEd();toast(s==='approved'?'✅ Goedgekeurd':'❌ Afgewezen')}
+function delRec(i){if(!confirm(`Verwijder ${db[i].id} L${db[i].laag}?`))return;db.splice(i,1);updCnt();renderEd();toast('🗑 Verwijderd')}
+
+// ══ PDF EXPORT ══
+function xPDF(){
+  const apr=db.filter(r=>r.status==='approved');
+  const rows=apr.map(r=>{const hi=hiRec(r);const st=hiSt(hi,rkFor(r.m1,r.naad));
+    return`<tr><td>${r.id}</td><td>${r.laag}</td><td>${r.pos}</td><td>${r.m1} ${r.d1}mm</td><td>${r.m2} ${r.d2}mm</td><td>${r.naad}</td><td>${r.ah}</td><td>${r.A}</td><td>${r.V}</td><td>${r.S}</td><td style="color:${st.c==='ok'?'green':st.c==='warn'?'orange':'red'}">${hi.toFixed(3)}</td><td>${r.temp}°C</td></tr>`}).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>WeldTable Export</title><style>body{font-family:Arial,sans-serif;font-size:10px;margin:16px}h1{font-size:14px}h2{font-size:10px;color:#666;font-weight:normal;margin-bottom:14px}table{width:100%;border-collapse:collapse}th{background:#f59e0b;color:#000;padding:5px 7px;text-align:left;font-size:9px;letter-spacing:1px}td{padding:4px 7px;border-bottom:1px solid #eee}tr:nth-child(even){background:#fafafa}.ft{margin-top:16px;font-size:9px;color:#aaa}</style></head><body><h1>WeldTable — Goedgekeurde Lasparameters</h1><h2>Gegenereerd: ${new Date().toLocaleDateString('nl-NL')} · ${apr.length} records · Panasonic · Valk Welding</h2><table><thead><tr><th>Las ID</th><th>Laag</th><th>Pos</th><th>Mat 1</th><th>Mat 2</th><th>Naad</th><th>A/S</th><th>A</th><th>V</th><th>m/min</th><th>HI kJ/mm</th><th>Temp</th></tr></thead><tbody>${rows}</tbody></table><div class="ft">WeldTable v2.0 · K=0.8 MIG/MAG Europees</div></body></html>`);
+  w.document.close();setTimeout(()=>w.print(),400);
+}
+
+// ══ NAAD DIAGRAMS ══
+const DIAGS=[
+  {n:"Hoeklas",s:`<svg width="100" height="72" viewBox="0 0 100 72"><rect x="4" y="37" width="92" height="14" fill="none" stroke="#44445a" stroke-width="1.5"/><rect x="44" y="7" width="14" height="30" fill="none" stroke="#44445a" stroke-width="1.5"/><polygon points="44,37 58,37 51,23" fill="#f59e0b" opacity=".8"/><text x="61" y="33" fill="#f59e0b" font-family="monospace" font-size="9">a</text></svg>`,i:"T-verbinding<br>PB positie<br>Keelasmaat = a"},
+  {n:"V-Naad",s:`<svg width="100" height="72" viewBox="0 0 100 72"><polygon points="50,12 22,62 78,62" fill="none" stroke="#44445a" stroke-width="1.5"/><polygon points="50,14 28,62 72,62" fill="#f59e0b" opacity=".6"/><line x1="44" y1="12" x2="56" y2="12" stroke="#f59e0b" stroke-width="2"/><text x="57" y="10" fill="#f59e0b" font-family="monospace" font-size="8">neus</text></svg>`,i:"Stuiklas<br>2×37.5° = 75° totaal<br>Volledige doorlassing mogelijk"},
+  {n:"Halve V",s:`<svg width="100" height="72" viewBox="0 0 100 72"><rect x="22" y="10" width="26" height="55" fill="none" stroke="#44445a" stroke-width="1.5"/><polygon points="48,10 80,65 48,65" fill="none" stroke="#44445a" stroke-width="1.5"/><polygon points="48,12 76,65 48,65" fill="#f59e0b" opacity=".6"/></svg>`,i:"Eenzijdig<br>90° + 37.5°<br>Minder materiaalverlies"},
+  {n:"K-Naad",s:`<svg width="100" height="72" viewBox="0 0 100 72"><rect x="44" y="7" width="12" height="58" fill="none" stroke="#44445a" stroke-width="1.5"/><polygon points="44,7 16,36 44,36" fill="#f59e0b" opacity=".5" stroke="#44445a" stroke-width="1"/><polygon points="56,7 84,36 56,36" fill="#f59e0b" opacity=".5" stroke="#44445a" stroke-width="1"/><polygon points="44,65 16,36 44,36" fill="#38bdf8" opacity=".3" stroke="#44445a" stroke-width="1"/><polygon points="56,65 84,36 56,36" fill="#38bdf8" opacity=".3" stroke="#44445a" stroke-width="1"/></svg>`,i:"Platen >20mm<br>Tweezijdig<br>Minder vervorming"},
+  {n:"X-Naad",s:`<svg width="100" height="72" viewBox="0 0 100 72"><polygon points="50,7 18,36 50,36" fill="#f59e0b" opacity=".4" stroke="#44445a" stroke-width="1"/><polygon points="50,7 82,36 50,36" fill="#f59e0b" opacity=".4" stroke="#44445a" stroke-width="1"/><polygon points="50,65 18,36 50,36" fill="#38bdf8" opacity=".3" stroke="#44445a" stroke-width="1"/><polygon points="50,65 82,36 50,36" fill="#38bdf8" opacity=".3" stroke="#44445a" stroke-width="1"/></svg>`,i:"Platen >25mm<br>Symmetrisch<br>Minimale vervorming"},
+  {n:"Y-Naad",s:`<svg width="100" height="72" viewBox="0 0 100 72"><rect x="38" y="7" width="24" height="20" fill="none" stroke="#44445a" stroke-width="1.5"/><polygon points="38,27 62,27 78,65 22,65" fill="none" stroke="#44445a" stroke-width="1.5"/><polygon points="38,29 62,29 74,65 26,65" fill="#f59e0b" opacity=".6"/><text x="40" y="20" fill="#44445a" font-family="monospace" font-size="7">>50%</text></svg>`,i:"Dikke plaat, 1 kant<br>>50% hoogte recht<br>Meerdere vullagen"},
+];
+function renderDiags(){document.getElementById('dg').innerHTML=DIAGS.map(d=>`<div class="dcard"><div class="dcard-n">${d.n}</div><div style="text-align:center;padding:4px 0 8px">${d.s}</div><div class="dcard-i">${d.i}</div></div>`).join('')}
+
+// ══ ZWAAILAS ══
+const PATS=[
+  {id:'sin',n:'Sinusoïde',d:'Pat. 1',p:[{n:'Swing 1/2',v:'2.8 / 2.8 mm'},{n:'Frequency',v:'1.5 Hz'},{n:'Direction',v:'Simple'},{n:'Change Dir',v:'At Point'},{n:'Timer',v:'0.0 s'}],fn:(c,t,W,H)=>{c.beginPath();for(let x=0;x<W;x++){const y=H/2+Math.sin(x/W*Math.PI*4+t)*(H/2-8);x?c.lineTo(x,y):c.moveTo(x,y)}c.strokeStyle='#f59e0b';c.lineWidth=2;c.stroke()}},
+  {id:'tri',n:'Driehoek',d:'Pat. 2',p:[{n:'Swing 1/2',v:'2.0 / 2.0 mm'},{n:'Frequency',v:'1.0 Hz'},{n:'Timer',v:'0.2 s'},{n:'Change Dir',v:'At Point'}],fn:(c,t,W,H)=>{c.beginPath();for(let x=0;x<W;x++){const p=((x/W*4+t/Math.PI)%2);const y=p<1?H/2+(H/2-8)*(p*2-1):H/2+(H/2-8)*(1-(p-1)*2);x?c.lineTo(x,y):c.moveTo(x,y)}c.strokeStyle='#f59e0b';c.lineWidth=2;c.stroke()}},
+  {id:'trap',n:'Trapezium',d:'Pat. 3',p:[{n:'Swing 1/2',v:'3.0 / 3.0 mm'},{n:'Frequency',v:'0.8 Hz'},{n:'Timer',v:'0.3 s'},{n:'Change Dir',v:'At Center'}],fn:(c,t,W,H)=>{const top=8,bot=H-8;c.beginPath();for(let x=0;x<W;x++){const p=((x/W*4+t/Math.PI)%2);let y;if(p<.15)y=bot;else if(p<.35)y=top+(bot-top)*((0.35-p)/.2);else if(p<.65)y=top;else if(p<.85)y=top+(bot-top)*((p-.65)/.2);else y=bot;x?c.lineTo(x,y):c.moveTo(x,y)}c.strokeStyle='#f59e0b';c.lineWidth=2;c.stroke()}},
+  {id:'f8',n:'Figuur-8',d:'Pat. 4',p:[{n:'Swing 1/2',v:'2.5 / 2.5 mm'},{n:'a/b',v:'2.8 / 2.8 mm'},{n:'Frequency',v:'1.2 Hz'},{n:'Change Dir',v:'At Center'}],fn:(c,t,W,H)=>{c.beginPath();for(let i=0;i<=200;i++){const a=i/200*Math.PI*4+t;const x=W/2+Math.sin(a*.5)*(W/2-10);const y=H/2+Math.sin(a)*(H/2-8);i?c.lineTo(x,y):c.moveTo(x,y)}c.strokeStyle='#f59e0b';c.lineWidth=2;c.stroke()}},
+];
+function initSwing(){
+  document.getElementById('patg').innerHTML=PATS.map(p=>`<div class="pat" id="pat-${p.id}" onclick="pickPat('${p.id}')"><div class="pat-n">${p.n}</div><div class="pat-d">${p.d}</div></div>`).join('');
+  pickPat('sin');
+}
+function pickPat(id){
+  selP=PATS.find(p=>p.id===id);
+  document.querySelectorAll('.pat').forEach(e=>e.classList.toggle('on',e.id==='pat-'+id));
+  document.getElementById('swt').textContent=selP.n+' — '+selP.d;
+  document.getElementById('swc').innerHTML=selP.p.map(p=>`<div class="prow"><div><div class="pr-n">${p.n}</div></div><div class="pr-v">${p.v}</div></div>`).join('');
+  if(animF)cancelAnimationFrame(animF);
+  const cv=document.getElementById('sc'),ctx=cv.getContext('2d');
+  function loop(){ctx.clearRect(0,0,cv.width,cv.height);ctx.fillStyle='#0e0e18';ctx.fillRect(0,0,cv.width,cv.height);ctx.beginPath();ctx.moveTo(0,cv.height/2);ctx.lineTo(cv.width,cv.height/2);ctx.strokeStyle='#22223a';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);selP.fn(ctx,animT,cv.width,cv.height);animT+=0.04;animF=requestAnimationFrame(loop)}
+  loop();
+}
+
+// ══ PWA ══
+let dP=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dP=e;document.getElementById('instbanner').classList.add('on')});
+function doInstall(){if(!dP)return;dP.prompt();dP.userChoice.then(r=>{if(r.outcome==='accepted')document.getElementById('instbanner').classList.remove('on');dP=null})}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+// ══ INIT ══
+if(sessionStorage.getItem('wt_e')==='1'){isEd=true;updEdUI()}
+updCnt();
+</script>
+</body>
+</html>
