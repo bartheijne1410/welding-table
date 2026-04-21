@@ -1,7 +1,7 @@
 // ── v5 ── Verhoog dit versienummer bij elke update om cache te wissen
 const CACHE = 'weldingtable-v5';
 const ASSETS = [
-  './index.html',
+  './Index.html',
   './manifest.json'
 ];
 
@@ -42,7 +42,7 @@ self.addEventListener('fetch', e => {
       .catch(() =>
         // Fallback to cache if offline
         caches.match(e.request).then(cached =>
-          cached || caches.match('./index.html')
+          cached || caches.match('./Index.html')
         )
       )
   );
