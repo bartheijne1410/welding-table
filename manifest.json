@@ -2,7 +2,7 @@
   "name": "Welding Table — Panasonic",
   "short_name": "WeldTable",
   "description": "Lasrobot welding parameters database met heat input calculator",
-  "start_url": "./index.html"
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0d0f12",
   "theme_color": "#f59e0b",
