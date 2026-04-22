@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WeldTable Pro v1.4</title>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #05070a; --s1: #0d1117; --s2: #161b22; --bdr: #30363d;
+            --blue: #00d2ff; --blue-glow: rgba(0, 210, 255, 0.3);
+            --t1: #f0f6fc; --t2: #8b949e;
+            --head: 'Rajdhani', sans-serif;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--t1); font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; padding-bottom: 70px; }
+        
+        .hdr { background: var(--s1); border-bottom: 1px solid var(--bdr); padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .hdr-title { font-family: var(--head); font-size: 20px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .logo-svg { width: 32px; height: 32px; }
+
+        /* Auth Screen */
+        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-card { background: var(--s1); border: 1px solid var(--blue); padding: 30px; border-radius: 15px; width: 100%; max-width: 350px; box-shadow: 0 0 20px var(--blue-glow); }
+        
+        /* Nav */
+        .bnav { position: fixed; bottom: 0; width: 100%; background: var(--s1); border-top: 1px solid var(--bdr); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
+        .bn { background: none; border: none; color: var(--t2); font-family: var(--head); font-size: 10px; text-transform: uppercase; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .bn.on { color: var(--blue); text-shadow: 0 0 8px var(--blue-glow); }
+        .bn-special { background: var(--blue); color: #000; border-radius: 50%; width: 55px; height: 55px; margin-top: -30px; border: 5px solid var(--bg); box-shadow: 0 0 15px var(--blue-glow); font-size: 24px; display: flex; align-items: center; justify-content: center; }
+        
+        .pg { display: none; padding: 20px 15px; }
+        .pg.on { display: block; }
+        
+        /* Form */
+        .fld { margin-bottom: 15px; }
+        label { display: block; font-size: 11px; text-transform: uppercase; color: var(--t2); margin-bottom: 6px; font-weight: 600; }
+        input, select { width: 100%; background: var(--s2); border: 1px solid var(--bdr); color: var(--t1); padding: 14px; border-radius: 10px; font-size: 14px; outline: none; }
+        input:focus { border-color: var(--blue); }
+        .btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-family: var(--head); font-weight: 700; text-transform: uppercase; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: var(--blue); color: #000; }
+        
+        .card { background: var(--s1); border: 1px solid var(--bdr); border-radius: 14px; padding: 18px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen">
+        <div class="auth-card">
+            <div style="text-align: center; margin-bottom: 25px;">
+                <svg class="logo-svg" viewBox="0 0 100 100" style="width:60px; height:60px;">
+                    <path d="M20,80 L50,20 L80,80" fill="none" stroke="#00d2ff" stroke-width="4" />
+                    <path d="M45,40 L65,40 L35,70 L55,70" fill="none" stroke="#00d2ff" stroke-width="6" />
+                </svg>
+                <h2 style="font-family: var(--head); color: var(--blue); margin-top:10px;">WeldTable 1.4</h2>
+            </div>
+            <div class="fld"><label>Gebruikersnaam</label><input type="text" id="username" placeholder="Typ 'admin' voor beheer"></div>
+            <button class="btn btn-primary" onclick="doLogin()">Inloggen</button>
+        </div>
+    </div>
+
+    <header class="hdr">
+        <div class="hdr-title">
+            <svg class="logo-svg" viewBox="0 0 100 100">
+                <path d="M20,80 L50,20 L80,80" fill="none" stroke="currentColor" stroke-width="8" />
+                <path d="M45,40 L65,40 L35,70 L55,70" fill="none" stroke="currentColor" stroke-width="8" />
+            </svg>
+            <span>WeldTable</span>
+        </div>
+    </header>
+
+    <div id="pg-zoek" class="pg on">
+        <h2 style="font-family: var(--head);">Zoeken op Parameters</h2>
+        <div class="card">
+            <div class="fld"><label>A-Hoogte / S-Waarde</label><input type="text" placeholder="Bijv. A5 of S8"></div>
+            <button class="btn btn-primary">Extra Filters Toevoegen</button>
+        </div>
+    </div>
+
+    <div id="pg-nieuw" class="pg">
+        <h2 style="font-family: var(--head);">Nieuwe Las Toevoegen</h2>
+        <div class="card">
+            <div class="fld"><label>Zichtbaarheid</label><select><option>Publiek (Zichtbaar voor iedereen)</option><option>Privé (Alleen voor mij)</option></select></div>
+            <div class="fld"><label>A-Hoogte</label><input type="text" placeholder="10" onblur="if(this.value && !this.value.toLowerCase().startsWith('a')) this.value='a'+this.value"></div>
+            <button class="btn btn-primary" onclick="alert('In de volledige versie ga je nu naar de laaggegevens!')">Volgende Stap</button>
+        </div>
+    </div>
+
+    <div id="pg-stats" class="pg">
+        <h2 style="font-family:var(--head)">Statistieken</h2>
+        <div class="card"><h4>Lijst</h4><p>Nog geen data.</p></div>
+        <div id="adm-view" style="display:none; border-top: 2px solid var(--blue); padding-top: 15px;">
+            <h3 style="color:var(--blue)">Admin Dashboard</h3>
+            <div class="card" style="border-color:var(--amber)"><h4>Wachtrij Keuringen</h4><p>Geen publieke lassen in de wachtrij.</p></div>
+        </div>
+    </div>
+
+    <nav class="bnav">
+        <button class="bn on" onclick="nav('zoek')"><span style="font-size:18px">🔍</span>Zoek</button>
+        <button class="bn bn-special" onclick="nav('nieuw')"><span>+</span></button>
+        <button class="bn" onclick="nav('stats')"><span style="font-size:18px">📊</span>Stats</button>
+    </nav>
+
+    <script>
+        function nav(p){
+            document.querySelectorAll('.pg').forEach(el=>el.classList.remove('on'));
+            document.querySelectorAll('.bn').forEach(el=>el.classList.remove('on'));
+            document.getElementById('pg-'+p).classList.add('on');
+            event.currentTarget.classList.add('on');
+        }
+        function doLogin(){
+            const u = document.getElementById('username').value;
+            if(u.toLowerCase()==='admin') document.getElementById('adm-view').style.display='block';
+            document.getElementById('auth-screen').style.display='none';
+        }
+    </script>
+</body>
+</html>
