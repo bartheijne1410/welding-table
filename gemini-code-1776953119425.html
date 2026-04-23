@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WeldTable Pro v2.0</title>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #05070a; --s1: #0d1117; --s2: #161b22; --bdr: #30363d;
+            --blue: #00d2ff; --blue-glow: rgba(0, 210, 255, 0.4);
+            --amber: #f59e0b; --green: #2ecc71; --red: #e74c3c;
+            --t1: #f0f6fc; --t2: #8b949e;
+            --head: 'Rajdhani', sans-serif;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--t1); margin: 0; padding-bottom: 90px; overflow-x: hidden; height: 100vh; }
+        
+        /* HEADER & LOGO */
+        .hdr { background: var(--s1); border-bottom: 1px solid var(--bdr); padding: 10px 15px; display: flex; align-items: center; gap: 10px; position: sticky; top:0; z-index: 100; }
+        .logo-svg { width: 28px; height: 28px; filter: drop-shadow(0 0 5px var(--blue)); }
+        .hdr-title { font-family: var(--head); font-size: 18px; font-weight: 700; color: var(--blue); text-transform: uppercase; }
+
+        /* AUTH OVERLAY */
+        #auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .auth-card { background: var(--s1); border: 1px solid var(--blue); padding: 25px; border-radius: 15px; width: 100%; max-width: 400px; box-shadow: 0 0 30px var(--blue-glow); text-align: center; }
+        
+        /* UI ELEMENTS */
+        .pg { display: none; padding: 15px; height: calc(100vh - 140px); overflow-y: auto; }
+        .pg.on { display: block; }
+        .card { background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px; padding: 15px; margin-bottom: 12px; }
+        .section-title { font-family: var(--head); font-size: 13px; color: var(--blue); border-bottom: 1px solid var(--bdr); padding-bottom: 5px; margin: 15px 0 10px 0; text-transform: uppercase; }
+        
+        .fld { margin-bottom: 12px; text-align: left; }
+        label { display: block; font-size: 10px; text-transform: uppercase; color: var(--t2); margin-bottom: 4px; font-weight: 700; }
+        input, select, textarea { width: 100%; background: var(--s2); border: 1px solid var(--bdr); color: var(--t1); padding: 12px; border-radius: 8px; font-size: 14px; outline: none; }
+        
+        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-family: var(--head); font-weight: 700; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--blue); color: #000; margin-top: 10px; }
+        .btn-outline { background: transparent; border: 1px solid var(--blue); color: var(--blue); margin-bottom: 10px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .hidden { display: none !important; }
+
+        /* HEAT INPUT METER */
+        .hi-wrap { background: #000; padding: 12px; border-radius: 10px; border: 1px solid var(--bdr); margin-bottom: 15px; }
+        .hi-bar { height: 8px; background: #222; border-radius: 4px; overflow: hidden; margin-top: 8px; }
+        .hi-fill { height: 100%; width: 0%; transition: 0.5s; background: var(--green); }
+
+        /* NAV */
+        .bnav { position: fixed; bottom: 0; width: 100%; background: var(--s1); border-top: 1px solid var(--bdr); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
+        .bn { background: none; border: none; color: var(--t2); font-size: 10px; display: flex; flex-direction: column; align-items: center; text-transform: uppercase; font-family: var(--head); cursor: pointer; }
+        .bn.on { color: var(--blue); }
+
+        .wiz-step { display: none; }
+        .wiz-step.on { display: block; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-overlay">
+        <div id="login-box" class="auth-card">
+            <svg class="logo-svg" viewBox="0 0 24 24" fill="none" style="margin-bottom:10px">
+                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="#00d2ff" stroke-width="2" fill="rgba(0,210,255,0.2)"/>
+            </svg>
+            <h2 style="font-family: var(--head); color: var(--blue); margin:0 0 20px 0">WeldTable Pro</h2>
+            <div class="fld"><label>Gebruikersnaam</label><input type="text" id="l-user" placeholder="Bart_Benjamin_@14"></div>
+            <div class="fld"><label>Wachtwoord</label><input type="password" id="l-pass"></div>
+            <button class="btn btn-primary" onclick="handleLogin()">Inloggen</button>
+            <button class="btn" style="background:none; color:var(--blue); font-size:12px; text-decoration:underline; margin-top:10px" onclick="showAuth('reg')">Registreren</button>
+        </div>
+
+        <div id="reg-box" class="auth-card hidden">
+            <h2 style="font-family: var(--head); color: var(--blue);">Registreren</h2>
+            <div class="grid-2">
+                <div class="fld"><label>Gebruikersnaam</label><input type="text" id="r-user"></div>
+                <div class="fld"><label>E-mail</label><input type="email" id="r-email"></div>
+            </div>
+            <div class="fld"><label>Wachtwoord</label><input type="password" id="r-pass"></div>
+            <div class="fld"><label>Bedrijfsnaam</label><input type="text" id="r-comp"></div>
+            <div class="fld"><label>Bedrijfs Adres</label><textarea id="r-addr" rows="2"></textarea></div>
+            <button class="btn btn-primary" onclick="handleRegister()">Account Aanmaken</button>
+            <button class="btn" style="background:none; color:var(--blue); font-size:12px; text-decoration:underline" onclick="showAuth('login')">Terug naar login</button>
+        </div>
+
+        <div id="verify-box" class="auth-card hidden">
+            <h2 style="font-family: var(--head); color: var(--amber);">Verifieer je Mail</h2>
+            <p style="font-size: 13px; color: var(--t2);">Klik op de knop in de mail om je account te activeren.</p>
+            <button class="btn btn-primary" style="background: var(--green);" onclick="completeVerification()">Bevestig Verificatie (Simulatie)</button>
+        </div>
+    </div>
+
+    <header class="hdr">
+        <svg class="logo-svg" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="#00d2ff" stroke-width="2"/></svg>
+        <div class="hdr-title">WeldTable Pro</div>
+        <div id="user-display" style="margin-left:auto; font-size:10px; color:var(--amber)"></div>
+    </header>
+
+    <div id="pg-zoek" class="pg on">
+        <div style="display:flex; gap:10px; margin-bottom:15px">
+            <button class="btn btn-outline" style="flex:1" onclick="setSearchMode('param')">Parameters</button>
+            <button class="btn btn-outline" style="flex:1" onclick="setSearchMode('nr')">Lasnummer</button>
+        </div>
+
+        <div id="search-param" class="card">
+            <label>Zoeken op Basis Parameters</label>
+            <div class="fld"><label>Materiaal</label><input type="text" id="q-mat" placeholder="Bijv. S355"></div>
+            <div class="grid-2">
+                <div class="fld"><label>A-Hoogte</label><input type="text"></div>
+                <div class="fld"><label>Robot No.</label><input type="text"></div>
+            </div>
+            <button class="btn btn-primary">Zoek Lassen</button>
+        </div>
+
+        <div id="search-nr" class="card hidden">
+            <label>Zoeken op Lasnummer</label>
+            <div class="fld"><label>Lasnummer / WPS ID</label><input type="text" placeholder="Bijv. WPS-001"></div>
+            <button class="btn btn-primary">Zoek Nummer</button>
+        </div>
+    </div>
+
+    <div id="pg-nieuw" class="pg">
+        <div id="w-s1" class="wiz-step on">
+            <h3 style="font-family: var(--head)">Stap 1: Privacy</h3>
+            <div class="card">
+                <button class="btn btn-outline" onclick="setWeldPrivacy('pub')">Publieke Las (Keuring nodig)</button>
+                <button class="btn btn-outline" onclick="setWeldPrivacy('priv')">Privé Las</button>
+            </div>
+        </div>
+
+        <div id="w-s2" class="wiz-step">
+            <h3 style="font-family: var(--head)">Stap 2: Materiaal & NEN-ISO</h3>
+            <div class="card">
+                <div class="grid-2">
+                    <div class="fld"><label>Materiaal 1</label><select id="m1"><option>S235</option><option>S355</option><option>S700</option></select></div>
+                    <div class="fld"><label>Dikte 1 (mm)</label><input type="number"></div>
+                </div>
+                <div class="grid-2">
+                    <div class="fld"><label>Materiaal 2</label><select id="m2"><option>S235</option><option>S355</option><option>S700</option></select></div>
+                    <div class="fld"><label>Dikte 2 (mm)</label><input type="number"></div>
+                </div>
+                <div class="fld"><label>Laspositie</label><input type="text" placeholder="PA / PB / PC"></div>
+                <button class="btn btn-primary" onclick="goStep(3)">Volgende stap</button>
+            </div>
+        </div>
+
+        <div id="w-s3" class="wiz-step">
+            <div class="hi-wrap">
+                <div style="display:flex; justify-content:space-between; font-size:11px">
+                    <span>Heat Input: <b id="hi-val">0.00</b> kJ/mm</span>
+                    <span id="hi-status" style="color:var(--green)">STABIEL</span>
+                </div>
+                <div class="hi-bar"><div id="hi-fill" class="hi-fill"></div></div>
+            </div>
+
+            <div class="card" style="max-height:50vh; overflow-y:auto">
+                <div class="section-title">Proces Parameters</div>
+                <div class="grid-2">
+                    <div class="fld"><label>Ampère</label><input type="number" id="p-a" oninput="calcHI()"></div>
+                    <div class="fld"><label>Volt</label><input type="number" id="p-v" oninput="calcHI()"></div>
+                </div>
+                <div class="fld"><label>Snelheid (cm/min)</label><input type="number" id="p-s" oninput="calcHI()"></div>
+
+                <div class="section-title">Extra Details</div>
+                <div class="grid-2">
+                    <div class="fld"><label>Gas soort</label><input type="text"></div>
+                    <div class="fld"><label>Draad Diameter</label><input type="text"></div>
+                </div>
+                <div class="fld"><label>Type Lasnaad</label>
+                    <select id="naad-type" onchange="toggleBevel()">
+                        <option value="hoek">Hoeklas</option><option value="v">V-Naad</option><option value="k">K-Naad</option>
+                    </select>
+                </div>
+                <div id="bevel-fields" class="grid-2 hidden">
+                    <div class="fld"><label>Afschuinhoek 1</label><input type="number"></div>
+                    <div class="fld"><label>Neushoogte 1</label><input type="number"></div>
+                </div>
+
+                <div class="fld"><label>Zwaailas?</label><select onchange="document.getElementById('weave-box').classList.toggle('hidden', this.value==='Nee')"><option>Nee</option><option>Ja</option></select></div>
+                <div id="weave-box" class="card hidden" style="background:var(--s2)">
+                    <div class="fld"><label>Patroon</label><input type="text"></div>
+                    <div class="grid-2">
+                        <div class="fld"><label>Freq (Hz)</label><input type="number"></div>
+                        <div class="fld"><label>Swing (mm)</label><input type="number"></div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="finalizeWeld()">Las Opslaan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pg-stats" class="pg">
+        <h3 style="font-family: var(--head)">Beheer & Stats</h3>
+        <div class="card">
+            <p style="font-size:12px; color:var(--t2)">Ingelogd als: <b id="stat-user" style="color:var(--blue)">-</b></p>
+            <button class="btn btn-outline" style="border-color:var(--red); color:var(--red)" onclick="logout()">Uitloggen</button>
+        </div>
+    </div>
+
+    <nav class="bnav">
+        <button class="bn on" onclick="nav('zoek')">🔍<br>Zoek</button>
+        <button class="bn" onclick="nav('nieuw')">➕<br>Nieuw</button>
+        <button class="bn" onclick="nav('stats')">📊<br>Stats</button>
+    </nav>
+
+    <script>
+        const db = new Dexie("WeldTable_v20");
+        db.version(1).stores({ users: 'user, pass, email, verified', welds: '++id, user, mat, privacy, status' });
+
+        // Admin setup
+        async function setupAdmin() {
+            const admin = await db.users.get('Bart_Benjamin_@14');
+            if(!admin) await db.users.put({ user: 'Bart_Benjamin_@14', pass: '3QkNo@67', verified: true });
+        }
+        setupAdmin();
+
+        // Session check
+        window.onload = () => {
+            const user = sessionStorage.getItem('activeUser');
+            if(user) loginSuccess(user);
+        };
+
+        function handleLogin() {
+            const u = document.getElementById('l-user').value;
+            const p = document.getElementById('l-pass').value;
+            db.users.get(u).then(user => {
+                if(user && user.pass === p) {
+                    if(!user.verified) return alert("E-mail nog niet geverifieerd!");
+                    sessionStorage.setItem('activeUser', u);
+                    loginSuccess(u);
+                } else alert("Foutieve gegevens");
+            });
+        }
+
+        let tempUser = null;
+        function handleRegister() {
+            const u = document.getElementById('r-user').value;
+            const e = document.getElementById('r-email').value;
+            const p = document.getElementById('r-pass').value;
+            if(!u || !e || !p) return alert("Vul alles in");
+            db.users.put({ user: u, email: e, pass: p, verified: false }).then(() => {
+                tempUser = u;
+                showAuth('verify');
+            });
+        }
+
+        function completeVerification() {
+            db.users.update(tempUser, { verified: true }).then(() => {
+                sessionStorage.setItem('activeUser', tempUser);
+                loginSuccess(tempUser);
+            });
+        }
+
+        function loginSuccess(u) {
+            document.getElementById('auth-overlay').classList.add('hidden');
+            document.getElementById('user-display').innerText = u;
+            document.getElementById('stat-user').innerText = u;
+            nav('zoek');
+        }
+
+        function logout() { sessionStorage.clear(); location.reload(); }
+
+        function nav(p) {
+            document.querySelectorAll('.pg').forEach(el => el.classList.remove('on'));
+            document.querySelectorAll('.bn').forEach(el => el.classList.remove('on'));
+            document.getElementById('pg-' + p).classList.add('on');
+            event.currentTarget.classList.add('on');
+        }
+
+        function setSearchMode(m) {
+            document.getElementById('search-param').classList.toggle('hidden', m==='nr');
+            document.getElementById('search-nr').classList.toggle('hidden', m==='param');
+        }
+
+        let currentPriv = 'priv';
+        function setWeldPrivacy(p) { currentPriv = p; goStep(2); }
+        function goStep(s) {
+            document.querySelectorAll('.wiz-step').forEach(el => el.classList.remove('on'));
+            document.getElementById('w-s' + s).classList.add('on');
+        }
+
+        function toggleBevel() {
+            document.getElementById('bevel-fields').classList.toggle('hidden', document.getElementById('naad-type').value==='hoek');
+        }
+
+        function calcHI() {
+            const a = parseFloat(document.getElementById('p-a').value) || 0;
+            const v = parseFloat(document.getElementById('p-v').value) || 0;
+            const s = parseFloat(document.getElementById('p-s').value) || 0;
+            if(a && v && s) {
+                const hi = (a * v * 0.06 * 0.8) / (s/10); // versimpelde formule voor indicatie
+                document.getElementById('hi-val').innerText = hi.toFixed(2);
+                const fill = document.getElementById('hi-fill');
+                fill.style.width = Math.min((hi/2)*100, 100) + '%';
+                fill.style.background = hi > 1.5 ? 'var(--red)' : hi > 1.2 ? 'var(--amber)' : 'var(--green)';
+            }
+        }
+
+        function finalizeWeld() {
+            alert("Las succesvol opgeslagen in de database!");
+            location.reload();
+        }
+
+        function showAuth(m) {
+            document.getElementById('login-box').classList.toggle('hidden', m!=='login');
+            document.getElementById('reg-box').classList.toggle('hidden', m!=='reg');
+            document.getElementById('verify-box').classList.toggle('hidden', m!=='verify');
+        }
+    </script>
+</body>
+</html>
