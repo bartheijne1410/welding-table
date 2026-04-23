@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WeldTable Pro v1.8</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #05070a; --s1: #0d1117; --s2: #161b22; --bdr: #30363d;
+            --blue: #00d2ff; --blue-glow: rgba(0, 210, 255, 0.4);
+            --amber: #f59e0b; --green: #2ecc71; --red: #e74c3c;
+            --t1: #f0f6fc; --t2: #8b949e;
+            --head: 'Rajdhani', sans-serif;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--t1); margin: 0; padding-bottom: 90px; overflow-x: hidden; }
+        
+        /* HEADER LOGO STYLING */
+        .hdr { 
+            background: var(--s1); 
+            border-bottom: 1px solid var(--bdr); 
+            padding: 10px 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .logo-svg { width: 32px; height: 32px; filter: drop-shadow(0 0 5px var(--blue)); }
+        .hdr-title { font-family: var(--head); font-size: 20px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* AUTH OVERLAY */
+        #auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 20px; }
+        .auth-card { background: var(--s1); border: 1px solid var(--blue); padding: 25px; border-radius: 15px; width: 100%; max-width: 450px; box-shadow: 0 0 30px var(--blue-glow); }
+
+        .bnav { position: fixed; bottom: 0; width: 100%; background: var(--s1); border-top: 1px solid var(--bdr); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
+        .bn { background: none; border: none; color: var(--t2); font-family: var(--head); font-size: 10px; text-transform: uppercase; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .bn.on { color: var(--blue); text-shadow: 0 0 8px var(--blue-glow); }
+        .bn-special { background: var(--blue); color: #000; border-radius: 50%; width: 55px; height: 55px; margin-top: -30px; border: 5px solid var(--bg); box-shadow: 0 0 15px var(--blue-glow); font-size: 24px; display: flex; align-items: center; justify-content: center; }
+
+        .pg { display: none; padding: 15px; }
+        .pg.on { display: block; }
+        .card { background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px; padding: 15px; margin-bottom: 12px; }
+        .fld { margin-bottom: 12px; }
+        label { display: block; font-size: 10px; text-transform: uppercase; color: var(--t2); margin-bottom: 4px; font-weight: 700; }
+        input, select, textarea { width: 100%; background: var(--s2); border: 1px solid var(--bdr); color: var(--t1); padding: 10px; border-radius: 8px; font-size: 14px; outline: none; }
+        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-family: var(--head); font-weight: 700; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--blue); color: #000; margin-top: 10px; }
+        .btn-outline { background: transparent; border: 1px solid var(--blue); color: var(--blue); margin-bottom: 10px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .hidden { display: none !important; }
+
+        /* WIZARD STEPS */
+        .wiz-step { display: none; }
+        .wiz-step.on { display: block; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-overlay">
+        <div id="login-box" class="auth-card">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <svg class="logo-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#00d2ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="#00d2ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="#00d2ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h2 style="font-family: var(--head); color: var(--blue); margin: 10px 0 0 0;">WeldTable Login</h2>
+            </div>
+            <div class="fld"><label>Gebruikersnaam</label><input type="text" id="l-user"></div>
+            <div class="fld"><label>Wachtwoord</label><input type="password" id="l-pass"></div>
+            <button class="btn btn-primary" onclick="doLogin()">Inloggen</button>
+            <button class="btn" style="background:none; color:var(--blue); text-decoration:underline" onclick="toggleAuth('reg')">Nog geen account? Registreer</button>
+        </div>
+        <div id="reg-box" class="auth-card hidden">
+            <h2 style="font-family: var(--head); color: var(--blue); margin-top:0">Registreren</h2>
+            <div class="grid-2"><div class="fld"><label>Gebruikersnaam</label><input type="text" id="r-user"></div><div class="fld"><label>E-mail</label><input type="email" id="r-email"></div></div>
+            <div class="fld"><label>Wachtwoord</label><input type="password" id="r-pass"></div>
+            <div class="fld"><label>Bedrijfsnaam</label><input type="text" id="r-comp"></div>
+            <div class="fld"><label>Bedrijfs Adres</label><textarea id="r-addr" rows="2"></textarea></div>
+            <button class="btn btn-primary" onclick="doRegister()">Account Aanmaken</button>
+            <button class="btn" style="background:none; color:var(--blue); text-decoration:underline" onclick="toggleAuth('login')">Terug naar Login</button>
+        </div>
+    </div>
+
+    <header class="hdr">
+        <svg class="logo-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="#00d2ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(0,210,255,0.2)"/>
+        </svg>
+        <div class="hdr-title">WeldTable Pro</div>
+    </header>
+
+    <div id="pg-zoek" class="pg on">
+        <div style="display:flex; gap:10px; margin-bottom:15px">
+            <button class="btn btn-outline" style="flex:1" id="btn-mode-param" onclick="setSearchMode('param')">Parameters</button>
+            <button class="btn btn-outline" style="flex:1" id="btn-mode-nr" onclick="setSearchMode('nr')">Lasnummer</button>
+        </div>
+        <div id="search-param-box" class="card">
+            <div class="fld"><label>Materiaal Soort</label><input type="text" id="q-mat" placeholder="Bijv. S355"></div>
+            <div class="grid-2">
+                <div class="fld"><label>A-Hoogte</label><input type="text" id="q-ah"></div>
+                <div class="fld"><label>Robot</label><input type="text" id="q-robot"></div>
+            </div>
+            <button class="btn btn-primary">Zoek Lassen</button>
+        </div>
+    </div>
+
+    <div id="pg-nieuw" class="pg">
+         <div class="card"><p style="text-align:center; color:var(--t2)">Open Wizard via de blauwe '+' knop onderin.</p></div>
+    </div>
+
+    <div id="pg-stats" class="pg">
+        <h3 style="font-family:var(--head)">Systeem & Database</h3>
+        <div class="card">
+            <label>Account Info</label>
+            <p id="stat-user" style="font-size:13px; color:var(--blue)">Niet ingelogd</p>
+        </div>
+    </div>
+
+    <nav class="bnav">
+        <button class="bn on" onclick="nav('zoek')">🔍<br>Zoek</button>
+        <button class="bn bn-special" onclick="nav('nieuw')">+</button>
+        <button class="bn" onclick="nav('stats')">📊<br>Stats</button>
+    </nav>
+
+    <script>
+        // ... (Dezelfde Dexie en Auth logica als v1.7)
+        const db = new Dexie("WeldTableV18");
+        db.version(1).stores({ users: 'user, pass, email', welds: '++id, user, mat1, privacy, status' });
+        
+        let currentUser = null;
+
+        async function doLogin() {
+            const u = document.getElementById('l-user').value;
+            const p = document.getElementById('l-pass').value;
+            const user = await db.users.where({user: u, pass: p}).first();
+            if(user) {
+                currentUser = user;
+                document.getElementById('auth-overlay').classList.add('hidden');
+                document.getElementById('stat-user').innerText = `Ingelogd als: ${u}`;
+            } else { alert("Foutieve login"); }
+        }
+
+        function toggleAuth(m) {
+            document.getElementById('login-box').classList.toggle('hidden', m==='reg');
+            document.getElementById('reg-box').classList.toggle('hidden', m==='login');
+        }
+
+        function nav(p) {
+            document.querySelectorAll('.pg').forEach(el => el.classList.remove('on'));
+            document.querySelectorAll('.bn').forEach(el => el.classList.remove('on'));
+            document.getElementById('pg-' + p).classList.add('on');
+            event.currentTarget.classList.add('on');
+        }
+    </script>
+</body>
+</html>
